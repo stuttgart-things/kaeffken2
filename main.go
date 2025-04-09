@@ -3,15 +3,19 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
+	tea "github.com/charmbracelet/bubbletea/v2"
+	lipgloss "github.com/charmbracelet/lipgloss/v2"
 	"github.com/stuttgart-things/kaeffken2/internal"
 
 	"github.com/stuttgart-things/survey"
 )
 
 var (
-	allAnswers  = make(map[string]interface{})
-	kclTemplate = "tests/proxmoxvm-template.k"
+	allAnswers   = make(map[string]interface{})
+	kclTemplate  = "tests/proxmoxvm-template.k"
+	renderedYAML string
 )
 
 func main() {
@@ -52,4 +56,30 @@ func main() {
 
 	renderedYaml := internal.RenderKCL(kclTemplate, allAnswers)
 	fmt.Println(renderedYaml)
+
+	// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.
+	p := tea.NewProgram(survey.InitialModel(renderedYaml), tea.WithAltScreen())
+	m, err := p.Run()
+	if err != nil {
+		fmt.Println("Error running editor:", err)
+		os.Exit(1)
+	}
+
+	// PRINT THE FINAL YAML CONTENT
+	if result, ok := m.(survey.Text); ok && result.ErrMsg == "" {
+		fmt.Println("\n" + lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			Padding(1, 2).
+			Render("Final YAML") + "\n")
+		fmt.Println(result.Textarea.Value())
+		renderedYAML = result.Textarea.Value()
+	}
+
+	// SAVE DIALOG
+	p = tea.NewProgram(survey.InitialSaveModel(renderedYaml))
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running program: %v\n", err)
+		os.Exit(1)
+	}
+
 }

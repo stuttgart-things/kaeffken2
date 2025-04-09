@@ -1,0 +1,70 @@
+---
+version: 3
+vars:
+  PROJECT_NAME:
+    sh: echo ${PWD##*/}
+  REPOSITORY_NAME: stuttgart-things
+  DATE:
+    sh: date +"%Y.%m%d.%H%M"
+  BRANCH:
+    sh: if [ $(git rev-parse --abbrev-ref HEAD) != "main" ]; then echo $(git rev-parse --abbrev-ref HEAD); else echo main ; fi
+
+tasks:
+  do:
+    desc: Select a task to run
+    cmds:
+      - |
+        task=$(yq e '.tasks | keys' Taskfile.yaml | sed 's/^- //' | gum choose)
+        task ${task}
+
+  branch:
+    desc: Create branch from main
+    cmds:
+      - git checkout main
+      - git branch
+      - git pull
+      - |
+        echo "Enter to be created (remote) branch:"
+        read BRANCH_NAME;
+        git checkout -b ${BRANCH_NAME}
+        git push origin ${BRANCH_NAME}
+      - git branch
+      - git branch --set-upstream-to=origin/main ${BRANCH_NAME}
+
+  pr:
+    desc: Create pull request into main
+    deps: [lint]
+    cmds:
+      - task: commit
+      #- unset GITHUB_TOKEN &&   gh auth login --hostname GitHub.com -p https --web
+      - gh pr create -t "{{ .BRANCH }}" -b "{{ .BRANCH }} branch into main"
+      - sleep 20s
+      - gh pr checks $(gh pr list | grep "^[^#;]" | grep '{{ .BRANCH }}' | awk '{print $1}') --watch
+      - gh pr merge $(gh pr list | grep "^[^#;]" | grep '{{ .BRANCH }}' | awk '{print $1}') --auto --rebase --delete-branch
+
+  commit:
+    desc: Commit + push code into branch
+    cmds:
+      - git branch --set-upstream-to=origin/{{ .BRANCH }}
+      - git pull
+      - git status
+      - |
+        git add *
+        git status
+        if [[ -n $(git status --porcelain) ]]; then
+          echo "Review the changes above."
+          gum confirm "Do you want to commit these changes?" || exit 0
+
+          echo "ENTER COMMIT MESSAGE"
+          COMMIT_MESSAGE=$(gum choose "CUSTOM MESSAGE" "feat: {{ .BRANCH }}" "fix: {{ .BRANCH }}" "BREAKING CHANGE: {{ .BRANCH }}")
+
+          if [ "$COMMIT_MESSAGE" == "CUSTOM MESSAGE" ]; then
+            CHANGED_FILES=$(git status --short | awk '{print $2}' | tr '\n' ' ')
+            COMMIT_MESSAGE=$(gum input --placeholder "Commit message" --value "Changed: $CHANGED_FILES")
+          fi
+
+          git commit --allow-empty -a -m "$COMMIT_MESSAGE"
+        else
+          echo "No changes to commit."
+        fi
+      - git push origin -u {{ .BRANCH }}
