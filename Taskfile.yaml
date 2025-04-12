@@ -8,6 +8,8 @@ vars:
     sh: date +"%Y.%m%d.%H%M"
   BRANCH:
     sh: if [ $(git rev-parse --abbrev-ref HEAD) != "main" ]; then echo $(git rev-parse --abbrev-ref HEAD); else echo main ; fi
+  DAGGER_MODULE: github.com/stuttgart-things/dagger/go@v0.6.4
+  TEST_GO_CODE: .
 
 tasks:
   do:
@@ -16,6 +18,34 @@ tasks:
       - |
         task=$(yq e '.tasks | keys' Taskfile.yaml | sed 's/^- //' | gum choose)
         task ${task}
+
+  lint:
+    desc: lint ci tasks
+    cmds:
+      - dagger call -m {{ .DAGGER_MODULE }} lint --src {{ .TEST_GO_CODE }} --timeout 300s --progress plain || true
+
+  ci:
+    desc: ci tasks
+    cmds:
+      - dagger call -m {{ .DAGGER_MODULE }} lint --src {{ .TEST_GO_CODE }} --timeout 300s --progress plain || true
+      - dagger call -m {{ .DAGGER_MODULE }} binary --src {{ .TEST_GO_CODE }} --goVersion {{ .GO_VERSION }} --goMainFile {{ .MAIN_GO_FILE }} --binName {{ .PROJECT_NAME }} --progress plain export --path={{ .OUTPUT_DIR }} && ls -lta {{ .OUTPUT_DIR }}
+
+      #- dagger call -m {{ .DAGGER_MODULE }} ko-build --src {{ .TEST_GO_CODE }} --token=env:GITHUB_TOKEN --repo "{{ .KO_REPO }}" --ko-version {{ .KO_VERSION }} --push true --progress plain
+      - dagger call -m {{ .DAGGER_MODULE }} security-scan --src {{ .TEST_GO_CODE }} --progress plain
+      #- dagger call -m ./go/ ko-build-and-scan --src {{ .TEST_GO_CODE }} --token=env:GITHUB_TOKEN --token-name GITHUB_TOKEN --repo {{ .KO_REPO }} --ko-version {{ .KO_VERSION }} --push true --output /tmp/report2.json
+      # - dagger call -m ./{{ .DAGGER_MODULE }} internal-pipeline --src {{ .TEST_GO_CODE }} --progress plain || true
+      #- dagger call -m ./{{ .DAGGER_MODULE }} run-workflow-entry-stage --src {{ .TEST_GO_CODE }} --lint-can-fail=true --security-scan-can-fail=true --trivy-scan-can-fail=true export --path {{ .WORKFLOW_REPORT }} --progress plain
+    vars:
+      DAGGER_MODULE: github.com/stuttgart-things/dagger/go@v0.6.4
+      TEST_GO_CODE: .
+      MAIN_GO_FILE: main.go
+      OUTPUT_DIR: "/tmp/{{ .PROJECT_NAME }}"
+      GO_VERSION: 1.24.2
+      KO_REPO: ttl.sh #ghcr.io/stuttgart-things/dagger
+      KO_VERSION: 6a9086f67de67c8006aca29cb02dede1a093aaaf
+      # OUTPUT_GO_DIR: /tmp/go
+      # #TEST_IMG_TAR: test.tar
+      # WORKFLOW_REPORT: /tmp/workflow.json
 
   branch:
     desc: Create branch from main
