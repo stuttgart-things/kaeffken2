@@ -3,8 +3,10 @@ module github.com/stuttgart-things/kaeffken2
 go 1.24.2
 
 require (
-	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.1.0
+	github.com/charmbracelet/bubbles v0.21.0
+	github.com/charmbracelet/bubbletea v1.3.4
+	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta1
+	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta1
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/stuttgart-things/survey v0.3.1
@@ -18,11 +20,9 @@ require (
 	github.com/chai2010/jsonv v1.1.3 // indirect
 	github.com/chai2010/protorpc v1.1.4 // indirect
 	github.com/charmbracelet/bubbles/v2 v2.0.0-beta.1 // indirect
-	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta1 // indirect
 	github.com/charmbracelet/colorprofile v0.3.0 // indirect
 	github.com/charmbracelet/huh v0.6.0 // indirect
-	github.com/charmbracelet/lipgloss v0.13.0 // indirect
-	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta1 // indirect
+	github.com/charmbracelet/lipgloss v1.1.0 // indirect
 	github.com/charmbracelet/x/ansi v0.8.0 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a // indirect
+	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
