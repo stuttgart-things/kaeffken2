@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta1
-	github.com/charmbracelet/lipgloss v0.13.0
+	github.com/charmbracelet/lipgloss v0.13.1
 	github.com/fatih/color v1.18.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
