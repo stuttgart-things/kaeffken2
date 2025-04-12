@@ -1,19 +1,18 @@
 import schemas.proxmox_vm_ansible
 
 # Configuration
+_count = option("count") or "1" #select;1,2,3,4,5
 _name = option("name") or "" #ask;min2+max30
 _cpu = option("cpu") or "8" #select;4,8,12,16
-_count = option("count") or "1" #select;1,2,3,4,5
 _ram = option("ram") or "4096" #select;4096,8192,12288
-_disk = option("disk") or "36G" #select;36G,48G,66G,96G
+_disk = option("disk") or "64G" #select;32G,64G,96G,128G,196G,256G
 _template = option("template") or "ubuntu24" #select;ubuntu24,rocky9
 _annotation = option("annotation") or "build w/ crossplane" #ask;min2+max30
 _namespace = option("namespace") or "proxmox" #ask;min2+max30
 _node = option("node") or "sthings-pve1"
-_datastore = option("datastore") or "sthings-pve1"
-_folderPath = option("folderPath") or "sthings-pve1"
-_network = option("network") or "vmbr0" #select;vmbr0,48G,66G,96G
-
+_datastore = option("datastore") or "v3700"
+_folderPath = option("folderPath") or "stuttgart-things"
+_network = option("network") or "vmbr0" #select;vmbr101,vmbr102,vmbr103,vmbr104
 
 proxmox_vm_ansible.ProxmoxVMAnsible {
     metadata = {
@@ -37,13 +36,13 @@ proxmox_vm_ansible.ProxmoxVMAnsible {
             network = _network
         }
         tfvars = {
-            secretName = "test-tfvars"
+            secretName = "proxmox-tfvars"
             secretNamespace = "proxmox"
             secretKey = "terraform.tfvars"
         }
         connectionSecret = {
-            name = "test-vm"
-            namespace = "proxmox"
+            name = _name
+            namespace = _namespace
         }
         compositionRef = {
             name = "proxmox-vm-ansible"
