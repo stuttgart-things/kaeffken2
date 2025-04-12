@@ -10,6 +10,7 @@ vars:
     sh: if [ $(git rev-parse --abbrev-ref HEAD) != "main" ]; then echo $(git rev-parse --abbrev-ref HEAD); else echo main ; fi
   DAGGER_MODULE: github.com/stuttgart-things/dagger/go@v0.6.4
   TEST_GO_CODE: .
+  GO_VERSION: 1.24.2
 
 tasks:
   do:
@@ -20,16 +21,23 @@ tasks:
         task ${task}
 
   lint:
-    desc: lint ci tasks
+    desc: Lint ci tasks
     cmds:
       - dagger call -m {{ .DAGGER_MODULE }} lint --src {{ .TEST_GO_CODE }} --timeout 300s --progress plain || true
+
+  build:
+    desc: Build binary
+    cmds:
+      - dagger call -m {{ .DAGGER_MODULE }} binary --src {{ .TEST_GO_CODE }} --goVersion {{ .GO_VERSION }} --goMainFile {{ .MAIN_GO_FILE }} --binName {{ .PROJECT_NAME }} --progress plain export --path={{ .OUTPUT_DIR }} && ls -lta {{ .OUTPUT_DIR }}
+    vars:
+      MAIN_GO_FILE: main.go
+      OUTPUT_DIR: "/tmp/{{ .PROJECT_NAME }}"
 
   ci:
     desc: ci tasks
     cmds:
-      - dagger call -m {{ .DAGGER_MODULE }} lint --src {{ .TEST_GO_CODE }} --timeout 300s --progress plain || true
-      - dagger call -m {{ .DAGGER_MODULE }} binary --src {{ .TEST_GO_CODE }} --goVersion {{ .GO_VERSION }} --goMainFile {{ .MAIN_GO_FILE }} --binName {{ .PROJECT_NAME }} --progress plain export --path={{ .OUTPUT_DIR }} && ls -lta {{ .OUTPUT_DIR }}
-
+      - task: lint
+      - task: build
       #- dagger call -m {{ .DAGGER_MODULE }} ko-build --src {{ .TEST_GO_CODE }} --token=env:GITHUB_TOKEN --repo "{{ .KO_REPO }}" --ko-version {{ .KO_VERSION }} --push true --progress plain
       - dagger call -m {{ .DAGGER_MODULE }} security-scan --src {{ .TEST_GO_CODE }} --progress plain
       #- dagger call -m ./go/ ko-build-and-scan --src {{ .TEST_GO_CODE }} --token=env:GITHUB_TOKEN --token-name GITHUB_TOKEN --repo {{ .KO_REPO }} --ko-version {{ .KO_VERSION }} --push true --output /tmp/report2.json
@@ -38,9 +46,6 @@ tasks:
     vars:
       DAGGER_MODULE: github.com/stuttgart-things/dagger/go@v0.6.4
       TEST_GO_CODE: .
-      MAIN_GO_FILE: main.go
-      OUTPUT_DIR: "/tmp/{{ .PROJECT_NAME }}"
-      GO_VERSION: 1.24.2
       KO_REPO: ttl.sh #ghcr.io/stuttgart-things/dagger
       KO_VERSION: 6a9086f67de67c8006aca29cb02dede1a093aaaf
       # OUTPUT_GO_DIR: /tmp/go
@@ -69,7 +74,7 @@ tasks:
       #- unset GITHUB_TOKEN &&   gh auth login --hostname GitHub.com -p https --web
       - gh pr create -t "{{ .BRANCH }}" -b "{{ .BRANCH }} branch into main"
       - sleep 20s
-      - gh pr checks $(gh pr list | grep "^[^#;]" | grep '{{ .BRANCH }}' | awk '{print $1}') --watch
+      #- gh pr checks $(gh pr list | grep "^[^#;]" | grep '{{ .BRANCH }}' | awk '{print $1}') --watch
       - gh pr merge $(gh pr list | grep "^[^#;]" | grep '{{ .BRANCH }}' | awk '{print $1}') --auto --rebase --delete-branch
 
   commit:
