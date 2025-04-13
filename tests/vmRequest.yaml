@@ -1,8 +1,9 @@
 ---
 apiVersion: resources.stuttgart-things.com/v1alpha1
-kind: vmRequest
+kind: request
 metadata:
   name: test-vm
 spec:
-  kind: proxmoxvm
+  type: vmRequest
+  kind: labul:proxmoxvmansible
   size: large

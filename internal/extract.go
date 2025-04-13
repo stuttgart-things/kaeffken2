@@ -87,3 +87,28 @@ func parseKCLQuestions(content string) ([]*survey.Question, error) {
 
 	return questions, nil
 }
+
+func ParseTemplateValues(values []string) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for _, item := range values {
+		parts := strings.SplitN(item, "=", 2)
+		if len(parts) != 2 {
+			continue // or return an error if you want to be strict
+		}
+
+		key := parts[0]
+		valStr := parts[1]
+
+		// Try to convert string to int or bool if applicable
+		if intVal, err := strconv.Atoi(valStr); err == nil {
+			result[key] = intVal
+		} else if boolVal, err := strconv.ParseBool(valStr); err == nil {
+			result[key] = boolVal
+		} else {
+			result[key] = valStr
+		}
+	}
+
+	return result
+}

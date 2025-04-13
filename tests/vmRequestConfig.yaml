@@ -1,0 +1,58 @@
+---
+# GIT CONFIG
+gitRepistory: https://github.com/stuttgart-things/stuttgart-things.git
+branchPrefix: "{{ .kind }}-{{ .name }}"
+destinationPath: "terraform/xplane/{{ .env }}/{{ .kind }}/{{ .name }}.yaml"
+
+
+# IF KIND IS NOT GIVEN, CHOOSE RANDOM
+kind:
+ - labul_proxmoxvm
+ - labda_vspherevm
+ - labul_vspherevm
+
+# IF SIZE IS NOT GIVEN, CHOOSE RANDOM
+size:
+ - small
+ - medium
+ - large
+ - xlarge
+
+
+
+
+
+kinds:
+  labul_proxmoxvm:
+    env: labul
+    cloud: proxmox
+    kind: proxmoxvmansible
+    template: proxmoxvmansible-labul.k
+  labda_vspherevm:
+    env: labda
+    cloud: vsphere
+    kind: vspherevmansible
+    template: vspherevmansible-labda.k
+  labul_vspherevm:
+    env: labul
+    cloud: vsphere
+    kind: proxmoxvmansible
+    template: vspherevmansible-labul.k
+
+sizes:
+  small:
+    cpu: 1
+    memory: 2Gi
+    disk: 20Gi
+  medium:
+    cpu: 2
+    memory: 4Gi
+    disk: 40Gi
+  large:
+    cpu: 4
+    memory: 8Gi
+    disk: 80Gi
+  xlarge:
+    cpu: 8
+    memory: 16Gi
+    disk: 160Gi
