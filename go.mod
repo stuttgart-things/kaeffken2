@@ -6,10 +6,12 @@ require (
 	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta1
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/fatih/color v1.18.0
+	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/stuttgart-things/survey v0.3.1
 	go.hein.dev/go-version v0.1.0
+	gopkg.in/yaml.v2 v2.4.0
 	kcl-lang.io/kcl-go v0.11.1
 )
 
@@ -64,7 +66,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	kcl-lang.io/lib v0.11.1 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect

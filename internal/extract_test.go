@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -140,4 +141,53 @@ func TestExtractQuestionsFromKCLFile(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to read KCL file")
 	})
+}
+
+func TestParseTemplateValues(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  []string
+		expect map[string]interface{}
+	}{
+		{
+			name:  "Basic string",
+			input: []string{"name=web"},
+			expect: map[string]interface{}{
+				"name": "web",
+			},
+		},
+		{
+			name:  "Integer and boolean values",
+			input: []string{"replicas=3", "debug=true"},
+			expect: map[string]interface{}{
+				"replicas": 3,
+				"debug":    true,
+			},
+		},
+		{
+			name:  "Invalid format is ignored",
+			input: []string{"invalid", "key=value"},
+			expect: map[string]interface{}{
+				"key": "value",
+			},
+		},
+		{
+			name:  "Multiple mixed types",
+			input: []string{"stringVal=hello", "intVal=42", "boolVal=false"},
+			expect: map[string]interface{}{
+				"stringVal": "hello",
+				"intVal":    42,
+				"boolVal":   false,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := ParseTemplateValues(tt.input)
+			if !reflect.DeepEqual(actual, tt.expect) {
+				t.Errorf("Expected %v, got %v", tt.expect, actual)
+			}
+		})
+	}
 }
