@@ -18,11 +18,21 @@ import (
 )
 
 var (
-	allAnswers   = make(map[string]interface{})
-	templatePath = "tests/proxmoxvm-template.k"
-	renderedYAML string
-	values       map[string]interface{}
+	allAnswers         = make(map[string]interface{})
+	templatePath       = "tests/proxmoxvm-template.k"
+	renderedYAML       string
+	values             map[string]interface{}
+	templateFileExists bool
+	configFileExists   bool
+	requestFileExists  bool
+	inputFiles         []inputFile
 )
+
+type inputFile struct {
+	Name       string
+	Path       string
+	FileExists bool
+}
 
 // renderCmd represents the render command
 var renderCmd = &cobra.Command{
@@ -31,27 +41,78 @@ var renderCmd = &cobra.Command{
 	Long:  `Render templates based on profiles.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		// INIT LOGGER
 		log.Logger = log.Output(zerolog.ConsoleWriter{
 			Out:        os.Stdout,
 			TimeFormat: time.RFC3339,
 		})
 
-		// log.Info().Str("version", "v1.2.3").Msg("starting CLI")
+		// GET/PARSE VALUES
+		valueFLags, _ := cmd.Flags().GetStringSlice("values")
 
-		// log.Info().Str("component", "cli").Msg("Application started")
-		// log.Warn().Msg("This is a warning")
+		if len(valueFLags) > 0 {
+			values = internal.ParseTemplateValues(valueFLags)
+			log.Info().Fields(values).Msg("values")
+		} else {
+			log.Info().Msg("NO VALUES GIVEN")
+		}
+
+		// VERIFY INPUT FILES
+		requestFile, _ := cmd.Flags().GetString("request")
+		configFile, _ := cmd.Flags().GetString("config")
+		templatePath, _ := cmd.LocalFlags().GetString("template")
+
+		inputFiles = append(inputFiles, inputFile{Name: "template", Path: templatePath, FileExists: false})
+		inputFiles = append(inputFiles, inputFile{Name: "config", Path: configFile, FileExists: false})
+		inputFiles = append(inputFiles, inputFile{Name: "request", Path: requestFile, FileExists: false})
+
+		for i := range inputFiles {
+			exists, err := internal.FileExists(inputFiles[i].Path)
+			if err != nil {
+				log.Error().Err(err).Str("path", inputFiles[i].Path).Msg("Error checking file")
+			}
+			inputFiles[i].FileExists = exists
+		}
+
+		for _, f := range inputFiles {
+			switch f.Name + fmt.Sprintf(":%t", f.FileExists) {
+			case "template:true":
+				log.Info().Str("path", f.Path).Msg("Template exists ✅")
+
+			case "template:false":
+				log.Warn().Str("path", f.Path).Msg("Template missing ❌")
+
+			case "request:true":
+				log.Info().Str("path", f.Path).Msg("Request exists ✅")
+				spec, _ := internal.ReadSpecSection(f.Path)
+				fmt.Println("SPEC:", spec)
+			case "request:false":
+				log.Warn().Str("path", f.Path).Msg("Request missing")
+
+			case "config:true":
+				log.Info().Str("path", f.Path).Msg("Config exists")
+
+			case "config:false":
+				log.Warn().Str("path", f.Path).Msg("Config missing")
+
+			default:
+				log.Warn().Str("name", f.Name).Str("path", f.Path).Msg("Unknown input file type or state")
+			}
+		}
+
+		// VERIFY FLAGS
 
 		// GET TEMPLATE PATH + CHECK EXISTENCE
-		templatePath, _ := cmd.LocalFlags().GetString("template")
-		exists, err := internal.FileExists(templatePath)
-		fmt.Println("EXISTS", exists)
-		fmt.Println("ERROR", err)
-
-		internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
-
-		// GET/PARSE VALUES
-		templateValues, _ := cmd.Flags().GetStringSlice("values")
-		values = internal.ParseTemplateValues(templateValues)
+		// if templatePath == "" {
+		// 	templateExists, err := internal.FileExists(templatePath)
+		// 	log.Info().Bool("template exists", templateExists).Msg(templatePath)
+		// 	internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
+		// 	if !templateExists {
+		// 		log.Warn().Msg("TEMPLATE DOES NOT EXIST")
+		// 	}
+		// } else {
+		// 	log.Info().Msg("TEMPLATE PATH NOT GIVEN")
+		// }
 
 		// IF TEMPLATE IS GIVEN
 		// READ VALUES
@@ -98,7 +159,9 @@ func init() {
 	rootCmd.AddCommand(renderCmd)
 	renderCmd.Flags().StringSlice("values", []string{}, "templating values")
 	renderCmd.Flags().String("template", "", "path to to be rendered template")
-	renderCmd.Flags().String("destination", "", "path to output (if output file)")
+	renderCmd.Flags().String("config", "", "path to config file")
+	renderCmd.Flags().String("request", "", "path to request file")
+	renderCmd.Flags().String("destination", "", "path to output (if output=file)")
 }
 
 // FLAGS:
