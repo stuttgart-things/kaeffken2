@@ -5,8 +5,10 @@ import (
 	"errors"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,8 +16,11 @@ func TestCheckErr(t *testing.T) {
 	var buf bytes.Buffer
 	exitCalled := false
 
-	// Set up test logger
-	Logger = zerolog.New(&buf).With().Timestamp().Logger()
+	// INIT LOGGER
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: time.RFC3339,
+	})
 
 	// Disable fatal to avoid os.Exit
 	UseFatal = false
@@ -27,7 +32,6 @@ func TestCheckErr(t *testing.T) {
 
 	// Reset after test
 	defer func() {
-		Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 		ExitFunc = os.Exit
 		UseFatal = true
 	}()
