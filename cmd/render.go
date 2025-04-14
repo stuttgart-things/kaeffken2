@@ -26,7 +26,7 @@ var (
 	configFileExists   bool
 	requestFileExists  bool
 	inputFiles         []inputFile
-	defaultDictConfig  = make(map[string]interface{})
+	dicts              = make(map[string]interface{})
 	err                error
 )
 
@@ -90,27 +90,33 @@ var renderCmd = &cobra.Command{
 				fmt.Println("SPEC:", requestSpec)
 
 			case "request:false":
-				log.Warn().Str("path", f.Path).Msg("Request missing")
+				log.Warn().Str("path", f.Path).Msg("Request missing ❌")
 
 			case "config:true":
-				log.Info().Str("path", f.Path).Msg("Config exists")
+				log.Info().Str("path", f.Path).Msg("Config exists ✅")
 				configSpec, _ := internal.ReadSpecSection(f.Path)
 				fmt.Println("SPEC CONFIG:", configSpec)
 
-				defaultDictConfig, err = internal.ReadDicts(f.Path, "dicts")
+				dicts, err = internal.ReadDicts(f.Path, "dicts")
 				internal.CheckErr(err, "ERROR READING CONFIG DICTS")
 
 			case "config:false":
-				log.Warn().Str("path", f.Path).Msg("Config missing")
+				log.Warn().Str("path", f.Path).Msg("Config missing ❌")
 
 			default:
-				log.Warn().Str("name", f.Name).Str("path", f.Path).Msg("Unknown input file type or state")
+				log.Warn().Str("name", f.Name).Str("path", f.Path).Msg("Unknown input file type or state ❌")
 			}
 		}
 
-		fmt.Println("DICTS", defaultDictConfig)
+		// IF TEMPLATE IS DEFINED AND NO OTHER CONFIG
+		// GET DEFAULT ANSWERS FROM SURVEY
+		// MERGE WITH VALUES (VALUES ARE MOST IMPORTNAT)
+		// TEST FOR ATTENDED AND UNATTENDED MODE
 
-		bla := internal.GetValueFromDicts(defaultDictConfig, "kinds", "labul_proxmoxvm")
+		fmt.Println("DICTS", dicts)
+
+		// HOW TO GET DICT VALUES
+		bla := internal.GetValueFromDicts(dicts, "kinds", "labul_proxmoxvm")
 		fmt.Println("BLA", bla)
 
 		// VERIFY FLAGS
