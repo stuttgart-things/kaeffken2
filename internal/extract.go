@@ -3,10 +3,8 @@ package internal
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"regexp"
 	"strconv"
-	"testing"
 
 	"github.com/stuttgart-things/survey"
 	"gopkg.in/yaml.v3"
@@ -114,50 +112,6 @@ func ParseTemplateValues(values []string) map[string]interface{} {
 	}
 
 	return result
-}
-
-func TestReadDictEntry(t *testing.T) {
-	yamlContent := `
-dicts:
-  kinds:
-    labul_proxmoxvm:
-      env: labul
-      cloud: proxmox
-      kind: proxmoxvmansible
-      template: proxmoxvmansible-labul.k
-    labda_vspherevm:
-      env: labda
-      cloud: vsphere
-      kind: vspherevmansible
-      template: vspherevmansible-labda.k
-`
-
-	tmpFile, err := os.CreateTemp("", "dicts_test_*.yaml")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	if _, err := tmpFile.WriteString(yamlContent); err != nil {
-		t.Fatalf("Failed to write YAML to temp file: %v", err)
-	}
-	tmpFile.Close()
-
-	expected := map[string]interface{}{
-		"env":      "labda",
-		"cloud":    "vsphere",
-		"kind":     "vspherevmansible",
-		"template": "vspherevmansible-labda.k",
-	}
-
-	result, err := ReadDictEntry(tmpFile.Name(), "kinds", "labda_vspherevm")
-	if err != nil {
-		t.Fatalf("ReadDictEntry failed: %v", err)
-	}
-
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("Expected: %+v, Got: %+v", expected, result)
-	}
 }
 
 func ReadDictEntry(filePath, dictName, key string) (map[string]interface{}, error) {
