@@ -84,14 +84,21 @@ var renderCmd = &cobra.Command{
 
 			case "request:true":
 				log.Info().Str("path", f.Path).Msg("Request exists ✅")
-				spec, _ := internal.ReadSpecSection(f.Path)
-				fmt.Println("SPEC:", spec)
+				requestSpec, _ := internal.ReadSpecSection(f.Path)
+				fmt.Println("SPEC:", requestSpec)
+
 			case "request:false":
 				log.Warn().Str("path", f.Path).Msg("Request missing")
 
 			case "config:true":
 				log.Info().Str("path", f.Path).Msg("Config exists")
+				configSpec, _ := internal.ReadSpecSection(f.Path)
+				fmt.Println("SPEC CONFIG:", configSpec)
+				bla, err := internal.ReadDictEntry(f.Path, "kinds", "labul_proxmoxvm")
+				internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
+				fmt.Println("BLA:", bla)
 
+				// configSpec, err := internal.ReadSpecSection(
 			case "config:false":
 				log.Warn().Str("path", f.Path).Msg("Config missing")
 
