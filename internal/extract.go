@@ -162,3 +162,16 @@ func ReadDicts(filePath, key string) (map[string]interface{}, error) {
 
 	return dicts, nil
 }
+
+func GetValueFromDicts(dicts map[string]interface{}, DictKey, key string) map[string]interface{} {
+
+	kinds := dicts[DictKey].(map[string]interface{})
+	return ConvertToInterfaceMap(kinds[key])
+}
+
+func ConvertToInterfaceMap(val interface{}) map[string]interface{} {
+	if m, ok := val.(map[string]interface{}); ok {
+		return m
+	}
+	return nil
+}

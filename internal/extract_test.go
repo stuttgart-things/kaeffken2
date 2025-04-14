@@ -277,3 +277,39 @@ dicts:
 	_, ok = kinds["labul_proxmoxvm"]
 	assert.True(t, ok, "'labul_proxmoxvm' should be under 'kinds'")
 }
+
+func TestToStringInterfaceMap(t *testing.T) {
+	t.Run("Valid map[string]interface{}", func(t *testing.T) {
+		input := map[string]interface{}{
+			"key1": "value1",
+			"key2": 42,
+		}
+		var iface interface{} = input
+
+		result := ConvertToInterfaceMap(iface)
+
+		assert.NotNil(t, result)
+		assert.Equal(t, "value1", result["key1"])
+		assert.Equal(t, 42, result["key2"])
+	})
+
+	t.Run("Invalid map[interface{}]interface{}", func(t *testing.T) {
+		input := map[interface{}]interface{}{
+			"key1": "value1",
+			"key2": 42,
+		}
+		var iface interface{} = input
+
+		result := ConvertToInterfaceMap(iface)
+
+		assert.Nil(t, result)
+	})
+
+	t.Run("Other type", func(t *testing.T) {
+		var iface interface{} = []string{"not", "a", "map"}
+
+		result := ConvertToInterfaceMap(iface)
+
+		assert.Nil(t, result)
+	})
+}

@@ -26,6 +26,8 @@ var (
 	configFileExists   bool
 	requestFileExists  bool
 	inputFiles         []inputFile
+	defaultDictConfig  = make(map[string]interface{})
+	err                error
 )
 
 type inputFile struct {
@@ -95,9 +97,8 @@ var renderCmd = &cobra.Command{
 				configSpec, _ := internal.ReadSpecSection(f.Path)
 				fmt.Println("SPEC CONFIG:", configSpec)
 
-				dicts, err := internal.ReadDicts(f.Path, "dicts")
+				defaultDictConfig, err = internal.ReadDicts(f.Path, "dicts")
 				internal.CheckErr(err, "ERROR READING CONFIG DICTS")
-				fmt.Println("DICTS", dicts)
 
 			case "config:false":
 				log.Warn().Str("path", f.Path).Msg("Config missing")
@@ -106,6 +107,11 @@ var renderCmd = &cobra.Command{
 				log.Warn().Str("name", f.Name).Str("path", f.Path).Msg("Unknown input file type or state")
 			}
 		}
+
+		fmt.Println("DICTS", defaultDictConfig)
+
+		bla := internal.GetValueFromDicts(defaultDictConfig, "kinds", "labul_proxmoxvm")
+		fmt.Println("BLA", bla)
 
 		// VERIFY FLAGS
 
