@@ -1,8 +1,8 @@
 ---
 # GIT CONFIG
-gitRepistory: https://github.com/stuttgart-things/stuttgart-things.git
-branchPrefix: "{{ .kind }}-{{ .name }}"
-destinationPath: "terraform/xplane/{{ .env }}/{{ .kind }}/{{ .name }}.yaml"
+# gitRepistory: https://github.com/stuttgart-things/stuttgart-things.git
+# branchPrefix: "{{ .kind }}-{{ .name }}"
+# destinationPath: "terraform/xplane/{{ .env }}/{{ .kind }}/{{ .name }}.yaml"
 
 spec:
   kind: # IF KIND IS NOT GIVEN, CHOOSE RANDOM
