@@ -95,6 +95,10 @@ var renderCmd = &cobra.Command{
 				configSpec, _ := internal.ReadSpecSection(f.Path)
 				fmt.Println("SPEC CONFIG:", configSpec)
 
+				dicts, err := internal.ReadDicts(f.Path, "dicts")
+				internal.CheckErr(err, "ERROR READING CONFIG DICTS")
+				fmt.Println("DICTS", dicts)
+
 			case "config:false":
 				log.Warn().Str("path", f.Path).Msg("Config missing")
 

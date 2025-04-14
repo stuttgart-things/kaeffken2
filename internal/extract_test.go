@@ -2,6 +2,7 @@ package internal
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -235,4 +236,44 @@ dicts:
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("Expected: %+v, Got: %+v", expected, result)
 	}
+}
+
+func TestReadDicts(t *testing.T) {
+	yamlContent := `
+dicts:
+  kinds:
+    labul_proxmoxvm:
+      env: labul
+      cloud: proxmox
+      kind: proxmoxvmansible
+      template: proxmoxvmansible-labul.k
+  sizes:
+    small:
+      cpu: 1
+      memory: 2Gi
+      disk: 20Gi
+`
+
+	// Create a temporary YAML file
+	tmpDir := t.TempDir()
+	yamlPath := filepath.Join(tmpDir, "test.yaml")
+	err := os.WriteFile(yamlPath, []byte(yamlContent), 0644)
+	assert.NoError(t, err)
+
+	// Read the dicts from the file
+	dicts, err := ReadDicts(yamlPath, "dicts")
+	assert.NoError(t, err)
+	assert.NotNil(t, dicts)
+
+	// Assert top-level keys
+	_, ok := dicts["kinds"]
+	assert.True(t, ok, "'kinds' key should be present")
+
+	_, ok = dicts["sizes"]
+	assert.True(t, ok, "'sizes' key should be present")
+
+	// Assert nested structure
+	kinds := dicts["kinds"].(map[string]interface{})
+	_, ok = kinds["labul_proxmoxvm"]
+	assert.True(t, ok, "'labul_proxmoxvm' should be under 'kinds'")
 }

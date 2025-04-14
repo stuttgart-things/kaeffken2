@@ -142,3 +142,23 @@ func ReadDictEntry(filePath, dictName, key string) (map[string]interface{}, erro
 
 	return entry, nil
 }
+
+// ReadDicts reads the full "dicts" block into a map[string]interface{}
+func ReadDicts(filePath, key string) (map[string]interface{}, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	var fullYAML map[string]interface{}
+	if err := yaml.Unmarshal(data, &fullYAML); err != nil {
+		return nil, fmt.Errorf("error unmarshalling yaml: %w", err)
+	}
+
+	dicts, ok := fullYAML[key].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("'dicts' not found or invalid format")
+	}
+
+	return dicts, nil
+}
