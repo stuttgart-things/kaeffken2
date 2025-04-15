@@ -26,64 +26,85 @@ func ExtractQuestionsFromKCLFile(filename string) ([]*survey.Question, error) {
 // PARSE KCL-QUESTIONS EXTRACTS QUESTIONS FROM KCL FILE CONTENT
 func parseKCLQuestions(content string) ([]*survey.Question, error) {
 	var questions []*survey.Question
+	fmt.Println("parseKCLQuestions called")
 
-	// Regex to match KCL option declarations with special comments
-	re := regexp.MustCompile(`_(\w+)\s*=\s*option\("([^"]+)"\)\s*or\s*"([^"]*)"\s*#\s*([^;]+)(?:;([^-+]*))?(?:-min(\d+))?(?:\+max(\d+))?`)
+	// Regex to match multiline list blocks
+	listRe := regexp.MustCompile(`_(\w+)\s*=\s*option\("([^"]+)"\)\s*or\s*"""([\s\S]*?)"""\s*#\s*(list)`)
 
-	lines := strings.Split(content, "\n")
-	for _, line := range lines {
-		matches := re.FindStringSubmatch(line)
-		if len(matches) < 5 { // Not a match
-			continue
-		}
+	// Regex to match single-line ask/select options
+	lineRe := regexp.MustCompile(`_(\w+)\s*=\s*option\("([^"]+)"\)\s*or\s*"([^"]*)"\s*#\s*([^;]+)(?:;([^-+]*))?(?:-min(\d+))?(?:\+max(\d+))?`)
 
-		// matches[0] = full match
-		// matches[1] = variable name
-		// matches[2] = option name
-		// matches[3] = default value
-		// matches[4] = kind (ask/select)
-		// matches[5] = options (for select)
-		// matches[6] = minLength
-		// matches[7] = maxLength
+	// First, parse all multiline #list questions
+	listMatches := listRe.FindAllStringSubmatch(content, -1)
+	for _, match := range listMatches {
+		fmt.Println("✅ Found #list block")
+		fmt.Println("Raw block content:", match[3])
 
 		question := &survey.Question{
-			Name:    matches[2], // option name
-			Default: matches[3], // default value
-			Kind:    matches[4], // ask or select
+			Name: match[2],
+			Kind: match[4],
 		}
 
-		// Set prompt (capitalize name)
 		if len(question.Name) > 0 {
 			question.Prompt = strings.ToUpper(question.Name) + "?"
 		}
 
-		// Handle select options if present
-		if question.Kind == "select" && matches[5] != "" {
-			question.Options = strings.Split(matches[5], ",")
-			// Trim whitespace from each option
-			for i, opt := range question.Options {
-				question.Options[i] = strings.TrimSpace(opt)
+		// Extract list options
+		rawBlock := match[3]
+		blockLines := strings.Split(rawBlock, "\n")
+		for _, l := range blockLines {
+			trimmed := strings.TrimSpace(l)
+			if trimmed != "" {
+				question.Options = append(question.Options, trimmed)
 			}
 		}
 
-		// Handle length constraints
-		if matches[6] != "" {
-			if min, err := strconv.Atoi(matches[6]); err == nil {
-				question.MinLength = min
-			}
-		}
-		if matches[7] != "" {
-			if max, err := strconv.Atoi(matches[7]); err == nil {
-				question.MaxLength = max
-			}
+		if len(question.Options) > 0 {
+			question.Default = question.Options[0]
 		}
 
-		// Set type based on kind
-		if question.Kind == "ask" {
-			question.Type = "string" // default type
-		}
-
+		question.Type = "string"
 		questions = append(questions, question)
+	}
+
+	// Now parse all inline ask/select questions line-by-line
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		if matches := lineRe.FindStringSubmatch(line); len(matches) >= 5 {
+			question := &survey.Question{
+				Name:    matches[2],
+				Default: matches[3],
+				Kind:    matches[4],
+			}
+
+			if len(question.Name) > 0 {
+				question.Prompt = strings.ToUpper(question.Name) + "?"
+			}
+
+			if question.Kind == "select" && matches[5] != "" {
+				question.Options = strings.Split(matches[5], ",")
+				for i, opt := range question.Options {
+					question.Options[i] = strings.TrimSpace(opt)
+				}
+			}
+
+			if matches[6] != "" {
+				if min, err := strconv.Atoi(matches[6]); err == nil {
+					question.MinLength = min
+				}
+			}
+			if matches[7] != "" {
+				if max, err := strconv.Atoi(matches[7]); err == nil {
+					question.MaxLength = max
+				}
+			}
+
+			if question.Kind == "ask" {
+				question.Type = "string"
+			}
+
+			questions = append(questions, question)
+		}
 	}
 
 	return questions, nil
