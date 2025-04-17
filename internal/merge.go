@@ -15,3 +15,30 @@ func MergeMaps(a, b map[string]interface{}) map[string]interface{} {
 
 	return merged
 }
+
+func CleanMap(input map[string]interface{}) map[string]interface{} {
+	cleaned := make(map[string]interface{})
+	for k, v := range input {
+		switch val := v.(type) {
+		case nil:
+			// skip
+		case string:
+			if val != "" {
+				cleaned[k] = val
+			}
+		case []interface{}:
+			if len(val) > 0 {
+				cleaned[k] = val
+			}
+		case map[string]interface{}:
+			// recursively clean nested maps
+			nested := CleanMap(val)
+			if len(nested) > 0 {
+				cleaned[k] = nested
+			}
+		default:
+			cleaned[k] = val
+		}
+	}
+	return cleaned
+}
