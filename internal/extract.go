@@ -23,49 +23,59 @@ func ExtractQuestionsFromKCLFile(filename string) ([]*survey.Question, error) {
 	return parseKCLQuestions(string(data))
 }
 
+func ExtractListsFromKCLFile(filename string) map[string]interface{} {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	content := parseKCLLists(string(data))
+
+	return content
+}
+
+func parseKCLLists(content string) (allOptions map[string]interface{}) {
+
+	allOptions = make(map[string]interface{})
+
+	// Regex to match multiline list blocks
+	listRe := regexp.MustCompile(`_(\w+)\s*=\s*option\("([^"]+)"\)\s*or\s*"""([\s\S]*?)"""\s*#\s*(list)`)
+
+	// First, parse all multiline #list questions
+	listMatches := listRe.FindAllStringSubmatch(content, -1)
+
+	for _, match := range listMatches {
+
+		// Extract list options
+		rawBlock := match[3]
+
+		fmt.Println(match[1])
+		// fmt.Println("KEYYYYY", match[3])
+		// fmt.Println("KEYYYYY", match[2])
+
+		blockLines := strings.Split(rawBlock, "\n")
+		var trimmedOptions []string
+
+		for _, l := range blockLines {
+			trimmed := strings.TrimSpace(l)
+			if trimmed != "" {
+				trimmedOptions = append(trimmedOptions, trimmed)
+			}
+		}
+
+		allOptions[match[1]] = trimmedOptions
+	}
+
+	return allOptions
+}
+
 // PARSE KCL-QUESTIONS EXTRACTS QUESTIONS FROM KCL FILE CONTENT
 func parseKCLQuestions(content string) ([]*survey.Question, error) {
 	var questions []*survey.Question
 	fmt.Println("parseKCLQuestions called")
 
-	// Regex to match multiline list blocks
-	listRe := regexp.MustCompile(`_(\w+)\s*=\s*option\("([^"]+)"\)\s*or\s*"""([\s\S]*?)"""\s*#\s*(list)`)
-
 	// Regex to match single-line ask/select options
 	lineRe := regexp.MustCompile(`_(\w+)\s*=\s*option\("([^"]+)"\)\s*or\s*"([^"]*)"\s*#\s*([^;]+)(?:;([^-+]*))?(?:-min(\d+))?(?:\+max(\d+))?`)
-
-	// First, parse all multiline #list questions
-	listMatches := listRe.FindAllStringSubmatch(content, -1)
-	for _, match := range listMatches {
-		fmt.Println("✅ Found #list block")
-		fmt.Println("Raw block content:", match[3])
-
-		question := &survey.Question{
-			Name: match[2],
-			Kind: match[4],
-		}
-
-		if len(question.Name) > 0 {
-			question.Prompt = strings.ToUpper(question.Name) + "?"
-		}
-
-		// Extract list options
-		rawBlock := match[3]
-		blockLines := strings.Split(rawBlock, "\n")
-		for _, l := range blockLines {
-			trimmed := strings.TrimSpace(l)
-			if trimmed != "" {
-				question.Options = append(question.Options, trimmed)
-			}
-		}
-
-		if len(question.Options) > 0 {
-			question.Default = question.Options[0]
-		}
-
-		question.Type = "string"
-		questions = append(questions, question)
-	}
 
 	// Now parse all inline ask/select questions line-by-line
 	lines := strings.Split(content, "\n")

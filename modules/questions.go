@@ -21,3 +21,8 @@ func ReadKCLQuestions(kclTemplatePath string) ([]*survey.Question, error) {
 
 	return questions, nil
 }
+
+func ReadKCLList(kclTemplatePath string) map[string]interface{} {
+
+	return internal.ExtractListsFromKCLFile(kclTemplatePath)
+}

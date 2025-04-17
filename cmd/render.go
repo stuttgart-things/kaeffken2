@@ -6,6 +6,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -148,6 +150,17 @@ var renderCmd = &cobra.Command{
 		// GET DICT VALUES FROM ALL FIELDS
 
 		// LOAD THE QUESTIONS FROM A KCL FILE
+
+		listDefaults := modules.ReadKCLList(templatePath)
+		fmt.Println("LIST DEFAULTS", listDefaults)
+
+		ergebnis := modules.RunListEditor(listDefaults)
+		fmt.Println("ERGEBNIS", ergebnis)
+
+		for key, value := range ergebnis {
+			fmt.Printf("Key: %s, Value: %v\n", key, value)
+		}
+
 		questions, err := modules.ReadKCLQuestions(templatePath)
 		internal.CheckErr(err, "Error reading KCL questions")
 
@@ -162,11 +175,17 @@ var renderCmd = &cobra.Command{
 		// SET ANWERS TO ALL VALUES
 		allAnswers = modules.SetAnswers(questions)
 
+		//reg := []string{"whateve", "vvdfvfdf", "patrick", "klaus", "test"}
+
+		fmt.Println("ALL ANSWERS", allAnswers)
+
 		// RENDER KCL FILE TO YAML
 		renderedYaml := internal.RenderKCL(templatePath, allAnswers)
 
+		fmt.Println("RENDERED YAML", renderedYaml)
+
 		// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.
-		renderedYaml = modules.RunEditor(renderedYaml)
+		renderedYaml = modules.RunEditor(cleanString(renderedYaml))
 
 		// SAVE DIALOG
 		modules.SaveDialog(renderedYaml)
@@ -189,3 +208,14 @@ func init() {
 // REQUEST-CONFIG
 // OUTPUT
 // VALUES
+
+func cleanString(input string) string {
+	// Regex to remove triple-quoted key+-value patterns
+	re := regexp.MustCompile(`'''[\w\-+]+'''`)
+	cleaned := re.ReplaceAllString(input, "")
+
+	// Remove any remaining single quotes
+	cleaned = strings.ReplaceAll(cleaned, "'", "")
+
+	return strings.TrimSpace(cleaned)
+}
