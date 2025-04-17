@@ -209,3 +209,5 @@ func init() {
 // REQUEST-CONFIG
 // OUTPUT
 // VALUES
+
+// go run main.go render --template tests/ansiblerun.k --values name=bla --request tests/vmRequest.yaml --config /home/sthings/projects/golang/kaeffken2/tests/vmRequestConfig.yaml
