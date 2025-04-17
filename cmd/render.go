@@ -6,8 +6,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -176,7 +174,7 @@ var renderCmd = &cobra.Command{
 		// }
 
 		// MERGE ALL ANSWERS WITH VALUES
-		allAnswers = internal.MergeMaps(allAnswers, listAnswers)
+		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
 
 		//reg := []string{"whateve", "vvdfvfdf", "patrick", "klaus", "test"}
 
@@ -188,7 +186,7 @@ var renderCmd = &cobra.Command{
 		fmt.Println("RENDERED YAML", renderedYaml)
 
 		// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.
-		renderedYaml = modules.RunEditor(cleanString(renderedYaml))
+		renderedYaml = modules.RunEditor(internal.CleanString(renderedYaml))
 
 		// SAVE DIALOG
 		modules.SaveDialog(renderedYaml)
@@ -211,14 +209,3 @@ func init() {
 // REQUEST-CONFIG
 // OUTPUT
 // VALUES
-
-func cleanString(input string) string {
-	// Regex to remove triple-quoted key+-value patterns
-	re := regexp.MustCompile(`'''[\w\-+]+'''`)
-	cleaned := re.ReplaceAllString(input, "")
-
-	// Remove any remaining single quotes
-	cleaned = strings.ReplaceAll(cleaned, "'", "")
-
-	return strings.TrimSpace(cleaned)
-}

@@ -28,3 +28,29 @@ func TestMergeMaps(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expected, result)
 	}
 }
+
+func TestCleanMap(t *testing.T) {
+	input := map[string]interface{}{
+		"name":  "example",
+		"empty": "",
+		"nil":   nil,
+		"slice": []interface{}{},
+		"nested": map[string]interface{}{
+			"foo": "",
+			"bar": "baz",
+		},
+	}
+
+	expected := map[string]interface{}{
+		"name": "example",
+		"nested": map[string]interface{}{
+			"bar": "baz",
+		},
+	}
+
+	result := CleanMap(input)
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("CleanMap() = %#v, want %#v", result, expected)
+	}
+}
