@@ -33,3 +33,37 @@ func RunEditor(renderedYaml string) string {
 	return renderedYaml
 
 }
+
+func RunListEditor(listDefaults map[string]interface{}) map[string]interface{} {
+
+	fmt.Println("WHATEVER", listDefaults)
+
+	// Initialize the listDefaults map if it's nil
+	output := make(map[string]interface{})
+
+	for key, value := range listDefaults {
+
+		val, ok := value.([]string)
+		if ok {
+			fmt.Println("Converted:", val)
+		} else {
+			fmt.Println("Not a []string")
+		}
+
+		fmt.Println("KEY", key)
+		fmt.Println("VALUE", val)
+
+		p := tea.NewProgram(survey.InitListModel(val))
+		m, err := p.Run()
+		if err != nil {
+			fmt.Printf("Error running prompt for %s: %v\n", key, err)
+			continue
+		}
+
+		if model, ok := m.(survey.ListModel); ok && model.FinalOutput != "" {
+			output[key] = model.FinalOutput
+		}
+	}
+
+	return output
+}

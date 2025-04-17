@@ -11,6 +11,12 @@ _ansible_vars = option("ansible_vars") or """
 manage_filesystem+-true
 update_packages+-true
 """ #list
+_playbooks = option("playbooks") or """
+sthings.baseos.prepare_env
+sthings.baseos.setup
+sthings.baseos.dev
+""" #list
+
 
 ansible_run.AnsibleRun {
     metadata = {
