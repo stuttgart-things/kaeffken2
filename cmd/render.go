@@ -150,17 +150,6 @@ var renderCmd = &cobra.Command{
 		// GET DICT VALUES FROM ALL FIELDS
 
 		// LOAD THE QUESTIONS FROM A KCL FILE
-
-		listDefaults := modules.ReadKCLList(templatePath)
-		fmt.Println("LIST DEFAULTS", listDefaults)
-
-		ergebnis := modules.RunListEditor(listDefaults)
-		fmt.Println("ERGEBNIS", ergebnis)
-
-		for key, value := range ergebnis {
-			fmt.Printf("Key: %s, Value: %v\n", key, value)
-		}
-
 		questions, err := modules.ReadKCLQuestions(templatePath)
 		internal.CheckErr(err, "Error reading KCL questions")
 
@@ -174,6 +163,20 @@ var renderCmd = &cobra.Command{
 
 		// SET ANWERS TO ALL VALUES
 		allAnswers = modules.SetAnswers(questions)
+
+		// LIST VALUES
+		listDefaults := modules.ReadKCLList(templatePath)
+		fmt.Println("LIST DEFAULTS", listDefaults)
+
+		listAnswers := modules.RunListEditor(listDefaults)
+		// fmt.Println("ERGEBNIS", ergebnis)
+
+		// for key, value := range ergebnis {
+		// 	fmt.Printf("Key: %s, Value: %v\n", key, value)
+		// }
+
+		// MERGE ALL ANSWERS WITH VALUES
+		allAnswers = internal.MergeMaps(allAnswers, listAnswers)
 
 		//reg := []string{"whateve", "vvdfvfdf", "patrick", "klaus", "test"}
 
