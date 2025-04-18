@@ -28,6 +28,7 @@ var (
 	inputFiles         []inputFile
 	dicts              = make(map[string]interface{})
 	err                error
+	listAnswers        map[string]interface{}
 )
 
 type inputFile struct {
@@ -42,6 +43,8 @@ var renderCmd = &cobra.Command{
 	Short: "Render templates",
 	Long:  `Render templates based on profiles.`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		runSurvey, _ := cmd.LocalFlags().GetBool("survey")
 
 		// INIT LOGGER
 		log.Logger = log.Output(zerolog.ConsoleWriter{
@@ -119,20 +122,6 @@ var renderCmd = &cobra.Command{
 		bla := internal.GetValueFromDicts(dicts, "kinds", "labul_proxmoxvm")
 		fmt.Println("BLA", bla)
 
-		// VERIFY FLAGS
-
-		// GET TEMPLATE PATH + CHECK EXISTENCE
-		// if templatePath == "" {
-		// 	templateExists, err := internal.FileExists(templatePath)
-		// 	log.Info().Bool("template exists", templateExists).Msg(templatePath)
-		// 	internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
-		// 	if !templateExists {
-		// 		log.Warn().Msg("TEMPLATE DOES NOT EXIST")
-		// 	}
-		// } else {
-		// 	log.Info().Msg("TEMPLATE PATH NOT GIVEN")
-		// }
-
 		// IF TEMPLATE IS GIVEN
 		// READ VALUES
 		// READ VALUES (IF DEFINED)
@@ -149,16 +138,20 @@ var renderCmd = &cobra.Command{
 
 		// LOAD THE QUESTIONS FROM A KCL FILE
 		questions, err := modules.ReadKCLQuestions(templatePath)
-		internal.CheckErr(err, "Error reading KCL questions")
+		internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
+
+		if !runSurvey {
+			allAnswers = survey.GetRandomAnswers(questions)
+			fmt.Println("RANDOM ANSWERS", allAnswers)
+		}
 
 		// BUILD THE SURVEY FORM AND GET A MAP FOR ANSWERS
 		surveyForm, _, err := survey.BuildSurvey(questions)
-		internal.CheckErr(err, "Error building survey")
+		internal.CheckErr(err, "ERROR BUILDING SURVEY")
 
 		// RUN THE INTERACTIVE SURVEY
 		err = surveyForm.Run()
-		internal.CheckErr(err, "Error running survey")
-
+		internal.CheckErr(err, "ERROR RUNNING SURVEY")
 		// SET ANWERS TO ALL VALUES
 		allAnswers = modules.SetAnswers(questions)
 
@@ -166,12 +159,11 @@ var renderCmd = &cobra.Command{
 		listDefaults := modules.ReadKCLList(templatePath)
 		fmt.Println("LIST DEFAULTS", listDefaults)
 
-		listAnswers := modules.RunListEditor(listDefaults)
-		// fmt.Println("ERGEBNIS", ergebnis)
-
-		// for key, value := range ergebnis {
-		// 	fmt.Printf("Key: %s, Value: %v\n", key, value)
-		// }
+		if runSurvey {
+			listAnswers = modules.RunListEditor(listDefaults)
+		} else {
+			listAnswers = listDefaults
+		}
 
 		// MERGE ALL ANSWERS WITH VALUES
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
@@ -201,6 +193,8 @@ func init() {
 	renderCmd.Flags().String("config", "", "path to config file")
 	renderCmd.Flags().String("request", "", "path to request file")
 	renderCmd.Flags().String("destination", "", "path to output (if output=file)")
+	renderCmd.Flags().Bool("survey", true, "run survey")
+
 }
 
 // FLAGS:
