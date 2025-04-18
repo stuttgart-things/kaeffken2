@@ -8,7 +8,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	github.com/stuttgart-things/survey v0.3.1
+	github.com/stuttgart-things/survey v0.5.0
 	go.hein.dev/go-version v0.1.0
 	kcl-lang.io/kcl-go v0.11.1
 )
