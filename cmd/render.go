@@ -189,6 +189,7 @@ var renderCmd = &cobra.Command{
 			modules.SaveDialog(renderedYaml)
 		} else {
 			internal.SaveToFile(renderedYaml, destinationPath)
+			log.Info().Str("path", destinationPath).Msg("Outputfile written ✅")
 		}
 	},
 }
