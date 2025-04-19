@@ -54,6 +54,7 @@ var renderCmd = &cobra.Command{
 
 		// GET/PARSE VALUES
 		valueFLags, _ := cmd.Flags().GetStringSlice("values")
+		destinationPath, _ := cmd.Flags().GetString("destination")
 
 		if len(valueFLags) > 0 {
 			values = internal.ParseTemplateValues(valueFLags)
@@ -150,10 +151,12 @@ var renderCmd = &cobra.Command{
 		internal.CheckErr(err, "ERROR BUILDING SURVEY")
 
 		// RUN THE INTERACTIVE SURVEY
-		err = surveyForm.Run()
-		internal.CheckErr(err, "ERROR RUNNING SURVEY")
-		// SET ANWERS TO ALL VALUES
-		allAnswers = modules.SetAnswers(questions)
+		if runSurvey {
+			err = surveyForm.Run()
+			internal.CheckErr(err, "ERROR RUNNING SURVEY")
+			// SET ANWERS TO ALL VALUES
+			allAnswers = modules.SetAnswers(questions)
+		}
 
 		// LIST VALUES
 		listDefaults := modules.ReadKCLList(templatePath)
@@ -177,12 +180,16 @@ var renderCmd = &cobra.Command{
 
 		fmt.Println("RENDERED YAML", renderedYaml)
 
-		// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.
-		renderedYaml = modules.RunEditor(internal.CleanString(renderedYaml))
+		if runSurvey {
 
-		// SAVE DIALOG
-		modules.SaveDialog(renderedYaml)
+			// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.
+			renderedYaml = modules.RunEditor(internal.CleanString(renderedYaml))
 
+			// SAVE DIALOG
+			modules.SaveDialog(renderedYaml)
+		} else {
+			internal.SaveToFile(renderedYaml, destinationPath)
+		}
 	},
 }
 
