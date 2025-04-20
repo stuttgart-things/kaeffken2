@@ -25,8 +25,10 @@ var (
 	templateFileExists bool
 	configFileExists   bool
 	requestFileExists  bool
-	inputFiles         []inputFile
-	dicts              = make(map[string]interface{})
+	inputFiles         []modules.InputFile
+	configValues       = make(map[string]interface{})
+	configSpec         = make(map[string]interface{})
+	requestSpec        = make(map[string]interface{})
 	err                error
 	listAnswers        map[string]interface{}
 )
@@ -44,6 +46,7 @@ var renderCmd = &cobra.Command{
 	Long:  `Render templates based on profiles.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		// GET FLAGS
 		runSurvey, _ := cmd.LocalFlags().GetBool("survey")
 
 		// INIT LOGGER
@@ -68,60 +71,35 @@ var renderCmd = &cobra.Command{
 		configFile, _ := cmd.Flags().GetString("config")
 		templatePath, _ := cmd.LocalFlags().GetString("template")
 
-		inputFiles = append(inputFiles, inputFile{Name: "template", Path: templatePath, FileExists: false})
-		inputFiles = append(inputFiles, inputFile{Name: "config", Path: configFile, FileExists: false})
-		inputFiles = append(inputFiles, inputFile{Name: "request", Path: requestFile, FileExists: false})
-
-		for i := range inputFiles {
-			exists, err := internal.FileExists(inputFiles[i].Path)
-			if err != nil {
-				log.Error().Err(err).Str("path", inputFiles[i].Path).Msg("Error checking file")
-			}
-			inputFiles[i].FileExists = exists
-		}
-
-		for _, f := range inputFiles {
-			switch f.Name + fmt.Sprintf(":%t", f.FileExists) {
-			case "template:true":
-				log.Info().Str("path", f.Path).Msg("Template exists ✅")
-
-			case "template:false":
-				log.Warn().Str("path", f.Path).Msg("Template missing ❌")
-
-			case "request:true":
-				log.Info().Str("path", f.Path).Msg("Request exists ✅")
-				requestSpec, _ := internal.ReadSpecSection(f.Path)
-				fmt.Println("SPEC:", requestSpec)
-
-			case "request:false":
-				log.Warn().Str("path", f.Path).Msg("Request missing ❌")
-
-			case "config:true":
-				log.Info().Str("path", f.Path).Msg("Config exists ✅")
-				configSpec, _ := internal.ReadSpecSection(f.Path)
-				fmt.Println("SPEC CONFIG:", configSpec)
-
-				dicts, err = internal.ReadDicts(f.Path, "dicts")
-				internal.CheckErr(err, "ERROR READING CONFIG DICTS")
-
-			case "config:false":
-				log.Warn().Str("path", f.Path).Msg("Config missing ❌")
-
-			default:
-				log.Warn().Str("name", f.Name).Str("path", f.Path).Msg("Unknown input file type or state ❌")
-			}
-		}
+		// CHECK INPUT FILES
+		inputFiles = append(inputFiles, modules.InputFile{Name: "template", Path: templatePath, FileExists: false})
+		inputFiles = append(inputFiles, modules.InputFile{Name: "config", Path: configFile, FileExists: false})
+		inputFiles = append(inputFiles, modules.InputFile{Name: "request", Path: requestFile, FileExists: false})
+		configSpec, configValues, requestSpec = modules.CheckInputFiles(inputFiles)
 
 		// IF TEMPLATE IS DEFINED AND NO OTHER CONFIG
 		// GET DEFAULT ANSWERS FROM SURVEY
-		// MERGE WITH VALUES (VALUES ARE MOST IMPORTNAT)
+		// MERGE WITH VALUES (VALUES ARE MOST IMPORTANT)
 		// TEST FOR ATTENDED AND UNATTENDED MODE
 
-		fmt.Println("DICTS", dicts)
+		// READ REQUEST SPEC
+		if len(requestSpec) > 0 {
+			fmt.Println("REQUEST", requestSpec)
+		} else {
+			log.Warn().Msg("NO REQUEST GIVEN")
+		}
 
-		// HOW TO GET DICT VALUES
-		bla := internal.GetValueFromDicts(dicts, "kinds", "labul_proxmoxvm")
-		fmt.Println("BLA", bla)
+		// READ CONFIG
+		if len(configSpec) > 0 {
+			fmt.Println("DICTS", configSpec)
+			// HOW TO GET DICT VALUES
+			// bla := internal.GetValueFromDicts(configSpec, "kinds", "labul_proxmoxvm")
+			// fmt.Println("BLA", bla)
+			// fmt.Println("Config values", configValues)
+
+		} else {
+			log.Warn().Msg("NO CONFIG GIVEN")
+		}
 
 		// IF TEMPLATE IS GIVEN
 		// READ VALUES
@@ -144,6 +122,8 @@ var renderCmd = &cobra.Command{
 		if !runSurvey {
 			allAnswers = survey.GetRandomAnswers(questions)
 			fmt.Println("RANDOM ANSWERS", allAnswers)
+			// MERGE ALL RANDOM ANSWERS WITH FLAG VALUES
+			allAnswers = internal.MergeMaps(allAnswers, values)
 		}
 
 		// BUILD THE SURVEY FORM AND GET A MAP FOR ANSWERS
@@ -168,7 +148,7 @@ var renderCmd = &cobra.Command{
 			listAnswers = listDefaults
 		}
 
-		// MERGE ALL ANSWERS WITH VALUES
+		// MERGE ALL ANSWERS WITH LIST ANSWERS
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
 
 		//reg := []string{"whateve", "vvdfvfdf", "patrick", "klaus", "test"}
@@ -181,15 +161,13 @@ var renderCmd = &cobra.Command{
 		fmt.Println("RENDERED YAML", renderedYaml)
 
 		if runSurvey {
-
 			// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.
 			renderedYaml = modules.RunEditor(internal.CleanString(renderedYaml))
-
 			// SAVE DIALOG
 			modules.SaveDialog(renderedYaml)
 		} else {
 			internal.SaveToFile(renderedYaml, destinationPath)
-			log.Info().Str("path", destinationPath).Msg("Outputfile written ✅")
+			log.Info().Str("path", destinationPath).Msg("OUTPUTFILE WRITTEN ✅")
 		}
 	},
 }
@@ -202,7 +180,6 @@ func init() {
 	renderCmd.Flags().String("request", "", "path to request file")
 	renderCmd.Flags().String("destination", "", "path to output (if output=file)")
 	renderCmd.Flags().Bool("survey", true, "run survey")
-
 }
 
 // FLAGS:
