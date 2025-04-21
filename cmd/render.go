@@ -89,13 +89,27 @@ var renderCmd = &cobra.Command{
 			log.Warn().Msg("NO REQUEST GIVEN")
 		}
 
-		// READ CONFIG
+		// READ CONFIG (IF DEFINED)
 		if len(configSpec) > 0 {
-			fmt.Println("DICTS", configSpec)
-			// HOW TO GET DICT VALUES
-			// bla := internal.GetValueFromDicts(configSpec, "kinds", "labul_proxmoxvm")
-			// fmt.Println("BLA", bla)
-			// fmt.Println("Config values", configValues)
+
+			// LOOP OVER ALL CONFIG KEYS
+			for key := range configSpec {
+
+				log.Info().Str("key", key).Msg("KEY SELECTED ✅")
+
+				// GET RANDOM FROM KEY
+				randomConfigKey, err := internal.GetRandomStringFromMap(configSpec, key)
+				internal.CheckErr(err, "ERROR GETTING RANDOM VALUE FOR CONFIG")
+				log.Info().Str("random", randomConfigKey).Msg("RANDOM CONFIG KEY SELECTED ✅")
+
+				// GET VALUES AND SET TO ALL CONFIG VALUES
+				allConfigValues := internal.GetValueFromDicts(configValues, key+"s", randomConfigKey)
+				log.Info().Interface("config", allConfigValues).Msg("LOADED CONFIG VALUES")
+
+				// MERGE ALL CONFIG VALUES WITH VALUES
+				allAnswers = internal.MergeMaps(allAnswers, allConfigValues)
+				fmt.Println("ALL CONFIG VALUES", allAnswers)
+			}
 
 		} else {
 			log.Warn().Msg("NO CONFIG GIVEN")
