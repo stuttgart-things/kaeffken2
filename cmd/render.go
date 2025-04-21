@@ -82,25 +82,25 @@ var renderCmd = &cobra.Command{
 		// MERGE WITH VALUES (VALUES ARE MOST IMPORTANT)
 		// TEST FOR ATTENDED AND UNATTENDED MODE
 
-		// READ REQUEST SPEC
-		if len(requestSpec) > 0 {
-			fmt.Println("REQUEST", requestSpec)
-		} else {
-			log.Warn().Msg("NO REQUEST GIVEN")
-		}
-
 		// READ CONFIG (IF DEFINED)
 		if len(configSpec) > 0 {
 
 			// LOOP OVER ALL CONFIG KEYS
 			for key := range configSpec {
 
+				var randomConfigKey string
 				log.Info().Str("key", key).Msg("KEY SELECTED ✅")
 
-				// GET RANDOM FROM KEY
-				randomConfigKey, err := internal.GetRandomStringFromMap(configSpec, key)
-				internal.CheckErr(err, "ERROR GETTING RANDOM VALUE FOR CONFIG")
-				log.Info().Str("random", randomConfigKey).Msg("RANDOM CONFIG KEY SELECTED ✅")
+				// CHECK IF KEY IS SET IN REQUEST
+				if value, ok := requestSpec[key]; ok {
+					log.Info().Str("key", key).Msg("CONFIG KEY IS SET IN REQUEST ✅")
+					randomConfigKey = value.(string)
+				} else {
+					log.Info().Str("key", key).Msg("CONFIG KEY NOT SET IN REQUEST ✅")
+					randomConfigKey, err = internal.GetRandomStringFromMap(configSpec, key)
+					internal.CheckErr(err, "ERROR GETTING RANDOM VALUE FOR CONFIG")
+					log.Info().Str("random", randomConfigKey).Msg("RANDOM CONFIG KEY SELECTED ✅")
+				}
 
 				// GET VALUES AND SET TO ALL CONFIG VALUES
 				allConfigValues := internal.GetValueFromDicts(configValues, key+"s", randomConfigKey)
@@ -113,6 +113,18 @@ var renderCmd = &cobra.Command{
 
 		} else {
 			log.Warn().Msg("NO CONFIG GIVEN")
+		}
+
+		// READ REQUEST (IF DEFINED)
+		if len(requestSpec) > 0 {
+
+			// SET SPEC VALUES TO ALL ANSWERS
+			for key := range requestSpec {
+				fmt.Println("KEY", key)
+			}
+
+		} else {
+			log.Warn().Msg("NO REQUEST GIVEN")
 		}
 
 		// IF TEMPLATE IS GIVEN
@@ -165,8 +177,6 @@ var renderCmd = &cobra.Command{
 		// MERGE ALL ANSWERS WITH LIST ANSWERS
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
 
-		//reg := []string{"whateve", "vvdfvfdf", "patrick", "klaus", "test"}
-
 		fmt.Println("ALL ANSWERS", allAnswers)
 
 		// RENDER KCL FILE TO YAML
@@ -195,12 +205,5 @@ func init() {
 	renderCmd.Flags().String("destination", "", "path to output (if output=file)")
 	renderCmd.Flags().Bool("survey", true, "run survey")
 }
-
-// FLAGS:
-// TEMPLATE
-// REQUEST
-// REQUEST-CONFIG
-// OUTPUT
-// VALUES
 
 // go run main.go render --template tests/ansiblerun.k --values name=bla --request tests/vmRequest.yaml --config /home/sthings/projects/golang/kaeffken2/tests/vmRequestConfig.yaml
