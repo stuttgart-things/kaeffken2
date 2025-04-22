@@ -72,7 +72,6 @@ func parseKCLLists(content string) (allOptions map[string]interface{}) {
 // PARSE KCL-QUESTIONS EXTRACTS QUESTIONS FROM KCL FILE CONTENT
 func parseKCLQuestions(content string) ([]*survey.Question, error) {
 	var questions []*survey.Question
-	fmt.Println("parseKCLQuestions called")
 
 	// Regex to match single-line ask/select options
 	lineRe := regexp.MustCompile(`_(\w+)\s*=\s*option\("([^"]+)"\)\s*or\s*"([^"]*)"\s*#\s*([^;]+)(?:;([^-+]*))?(?:-min(\d+))?(?:\+max(\d+))?`)

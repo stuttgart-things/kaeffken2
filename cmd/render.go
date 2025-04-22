@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -108,23 +107,11 @@ var renderCmd = &cobra.Command{
 
 				// MERGE ALL CONFIG VALUES WITH VALUES
 				allAnswers = internal.MergeMaps(allAnswers, allConfigValues)
-				fmt.Println("ALL CONFIG VALUES", allAnswers)
+				log.Info().Interface("config", allAnswers).Msg("MERGED CONFIG VALUES")
 			}
 
 		} else {
 			log.Warn().Msg("NO CONFIG GIVEN")
-		}
-
-		// READ REQUEST (IF DEFINED)
-		if len(requestSpec) > 0 {
-
-			// SET SPEC VALUES TO ALL ANSWERS
-			for key := range requestSpec {
-				fmt.Println("KEY", key)
-			}
-
-		} else {
-			log.Warn().Msg("NO REQUEST GIVEN")
 		}
 
 		// IF TEMPLATE IS GIVEN
@@ -147,7 +134,6 @@ var renderCmd = &cobra.Command{
 
 		if !runSurvey {
 			allAnswers = survey.GetRandomAnswers(questions)
-			fmt.Println("RANDOM ANSWERS", allAnswers)
 			// MERGE ALL RANDOM ANSWERS WITH FLAG VALUES
 			allAnswers = internal.MergeMaps(allAnswers, values)
 		}
@@ -166,7 +152,7 @@ var renderCmd = &cobra.Command{
 
 		// LIST VALUES
 		listDefaults := modules.ReadKCLList(templatePath)
-		fmt.Println("LIST DEFAULTS", listDefaults)
+		log.Info().Fields(listDefaults).Msg("LIST DEFAULTS")
 
 		if runSurvey {
 			listAnswers = modules.RunListEditor(listDefaults)
@@ -176,13 +162,12 @@ var renderCmd = &cobra.Command{
 
 		// MERGE ALL ANSWERS WITH LIST ANSWERS
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
-
-		fmt.Println("ALL ANSWERS", allAnswers)
+		log.Info().Fields(allAnswers).Msg("ALL ANSWERS")
 
 		// RENDER KCL FILE TO YAML
 		renderedYaml := internal.RenderKCL(templatePath, allAnswers)
 
-		fmt.Println("RENDERED YAML", renderedYaml)
+		// fmt.Println("RENDERED YAML", renderedYaml)
 
 		if runSurvey {
 			// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.

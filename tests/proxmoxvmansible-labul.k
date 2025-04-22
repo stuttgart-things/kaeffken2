@@ -14,6 +14,35 @@ _datastore = option("datastore") or "v3700"
 _folderPath = option("folderPath") or "stuttgart-things"
 _network = option("network") or "vmbr0" #select;vmbr101,vmbr102,vmbr103,vmbr104
 
+_playbooks = option("playbooks") or """
+"sthings.baseos.prepare_env",
+"sthings.baseos.setup",
+"sthings.baseos.dev"
+""" #list
+
+_ansible_vars = option("ansible_vars") or """
+"golang_version+-1.24.1",
+"manage_filesystem+-true",
+"update_packages+-true",
+"install_requirements+-true",
+"install_motd+-true",
+"username+-sthings",
+"lvm_home_sizing+-'15%'",
+"lvm_root_sizing+-'35%'",
+"lvm_var_sizing+-'50%'",
+"event_author+-crossplane",
+"event_tags+-ansible,baseos,crossplane,tekton",
+"send_to_msteams+-true",
+"reboot_all+-false"
+""" #list
+
+_collections = option("collections") or """
+"https://github.com/stuttgart-things/ansible/releases/download/sthings-rke-25.3.610/sthings-rke-25.3.610.tar.gz",
+"https://github.com/stuttgart-things/ansible/releases/download/sthings-awx-25.5.617/sthings-awx-25.5.617.tar.gz",
+"https://github.com/stuttgart-things/ansible/releases/download/sthings-container-25.1.813.tar.gz/sthings-container-25.1.813.tar.gz",
+"https://github.com/stuttgart-things/ansible/releases/download/sthings-baseos-25.1.814.tar.gz/sthings-baseos-25.1.814.tar.gz"
+""" #list
+
 proxmox_vm_ansible.ProxmoxVMAnsible {
     metadata = {
         name = _name
@@ -52,26 +81,8 @@ proxmox_vm_ansible.ProxmoxVMAnsible {
         }
         ansible = {
             provisioningName = _name
-            playbooks = [
-                "sthings.baseos.prepare_env",
-                "sthings.baseos.setup",
-                "sthings.baseos.dev"
-            ]
-            ansibleVarsFile = [
-                "golang_version+-1.24.1",
-                "manage_filesystem+-true",
-                "update_packages+-true",
-                "install_requirements+-true",
-                "install_motd+-true",
-                "username+-sthings",
-                "lvm_home_sizing+-'15%'",
-                "lvm_root_sizing+-'35%'",
-                "lvm_var_sizing+-'50%'",
-                "event_author+-crossplane",
-                "event_tags+-ansible,baseos,crossplane,tekton",
-                "send_to_msteams+-true",
-                "reboot_all+-false"
-            ]
+            playbooks = [var for var in _playbooks.split("\n") if var]
+            ansibleVarsFile = [var for var in _ansible_vars.split("\n") if var]
             gitRepoUrl = "https://github.com/stuttgart-things/ansible.git"
             gitRevision = "main"
             providerRef = {
@@ -80,12 +91,7 @@ proxmox_vm_ansible.ProxmoxVMAnsible {
             vaultSecretName = "vault"
             pipelineNamespace = "tekton-pipelines"
             workingImage = "ghcr.io/stuttgart-things/sthings-ansible:11.3.0-3"
-            collections = [
-                "https://github.com/stuttgart-things/ansible/releases/download/sthings-rke-25.3.610/sthings-rke-25.3.610.tar.gz",
-                "https://github.com/stuttgart-things/ansible/releases/download/sthings-awx-25.5.617/sthings-awx-25.5.617.tar.gz",
-                "https://github.com/stuttgart-things/ansible/releases/download/sthings-container-25.1.813.tar.gz/sthings-container-25.1.813.tar.gz",
-                "https://github.com/stuttgart-things/ansible/releases/download/sthings-baseos-25.1.814.tar.gz/sthings-baseos-25.1.814.tar.gz"
-            ]
+            collections = [var for var in _collections.split("\n") if var]
         }
     }
 }

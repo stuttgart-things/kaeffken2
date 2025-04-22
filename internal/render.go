@@ -17,8 +17,6 @@ func RenderKCL(kclFile string, allAnswers map[string]interface{}) string {
 		log.Fatalf("Error reading KCL file: %v", err)
 	}
 
-	fmt.Println("Content of KCL file:", string(content))
-
 	// OUTPUT ALL ANSWERS + MODIFY
 	for key, value := range allAnswers {
 		fmt.Printf("%s=%v\n", key, value)
