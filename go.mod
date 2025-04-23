@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/stuttgart-things/survey v0.5.0
 	go.hein.dev/go-version v0.1.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	gopkg.in/yaml.v3 v3.0.1
 	kcl-lang.io/kcl-go v0.11.1
 )
