@@ -129,6 +129,12 @@ var renderCmd = &cobra.Command{
 		// GET DICT VALUES FROM ALL FIELDS
 
 		// LOAD THE QUESTIONS FROM A KCL FILE
+
+		if templatePath == "" {
+			templatePath = allAnswers["template"].(string)
+			log.Info().Str("template", templatePath).Msg("TEMPLATE PATH SET FROM CONFIG")
+		}
+
 		questions, err := modules.ReadKCLQuestions(templatePath)
 		internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
 
