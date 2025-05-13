@@ -1,6 +1,7 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+Copyright © 2024 PATRICK HERMANN PATRICK.HERMANN@SVA.DE
 */
+
 package cmd
 
 import (
