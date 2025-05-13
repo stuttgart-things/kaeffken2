@@ -23,6 +23,8 @@ func GetTemplatesPaths(allAnswers, values map[string]interface{}, key string) ([
 		return nil, fmt.Errorf("type assertion to []interface{} failed for key %q", key)
 	}
 
+	allValues := MergeMaps(allAnswers, values)
+
 	templates := make([]Template, len(interfaces))
 	for i, v := range interfaces {
 		str, ok := v.(string)
@@ -35,12 +37,12 @@ func GetTemplatesPaths(allAnswers, values map[string]interface{}, key string) ([
 			return nil, fmt.Errorf("invalid template format in element %d: %q", i, str)
 		}
 
-		src, err := renderTemplate(parts[0], values)
+		src, err := renderTemplate(parts[0], allValues)
 		if err != nil {
 			return nil, fmt.Errorf("failed to render source in element %d: %w", i, err)
 		}
 
-		dest, err := renderTemplate(parts[1], values)
+		dest, err := renderTemplate(parts[1], allValues)
 		if err != nil {
 			return nil, fmt.Errorf("failed to render destination in element %d: %w", i, err)
 		}

@@ -5,7 +5,6 @@ Copyright © 2024 PATRICK HERMANN PATRICK.HERMANN@SVA.DE
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -58,7 +57,7 @@ var renderCmd = &cobra.Command{
 
 		// GET/PARSE VALUES
 		valueFLags, _ := cmd.Flags().GetStringSlice("values")
-		destinationPath, _ := cmd.Flags().GetString("destination")
+		// destinationPath, _ := cmd.Flags().GetString("destination")
 
 		if len(valueFLags) > 0 {
 			values = internal.ParseTemplateValues(valueFLags)
@@ -133,40 +132,44 @@ var renderCmd = &cobra.Command{
 		// GET DICT VALUES FROM ALL FIELDS
 
 		// LOAD THE QUESTIONS FROM A KCL FILE
-		if templatePath == "" {
-
-			templates, err := internal.GetTemplatesPaths(allAnswers, values, "templates")
-			internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
-
-			fmt.Println("Templates:", templates)
-
-			log.Info().Str("template", templatePath).Msg("TEMPLATE PATH SET FROM CONFIG")
+		// Retrieve template paths from allAnswers
+		templates, err := internal.GetTemplatesPaths(allAnswers, values, "templates")
+		if err != nil {
+			log.Fatal().Err(err).Msg("FAILED TO GET TEMPLATE PATHS")
 		}
 
-		questions, err := modules.ReadKCLQuestions(templatePath)
-		internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
+		// Collect questions from all templates
+		var allQuestions []*survey.Question
+		for _, template := range templates {
+			questions, err := modules.ReadKCLQuestions(template.Source)
+			if err != nil {
+				log.Fatal().Err(err).Str("template", template.Source).Msg("ERROR READING KCL QUESTIONS")
+			}
+			allQuestions = append(allQuestions, questions...)
+		}
 
+		// Get answers either randomly or via survey
 		if !runSurvey {
-			allAnswers = survey.GetRandomAnswers(questions)
-			// MERGE ALL RANDOM ANSWERS WITH FLAG VALUES
+			allAnswers = survey.GetRandomAnswers(allQuestions)
 			allAnswers = internal.MergeMaps(allAnswers, values)
 		}
 
-		// BUILD THE SURVEY FORM AND GET A MAP FOR ANSWERS
-		surveyForm, _, err := survey.BuildSurvey(questions)
+		// Build and run survey if enabled
+		surveyForm, _, err := survey.BuildSurvey(allQuestions)
 		internal.CheckErr(err, "ERROR BUILDING SURVEY")
 
-		// RUN THE INTERACTIVE SURVEY
 		if runSurvey {
 			err = surveyForm.Run()
 			internal.CheckErr(err, "ERROR RUNNING SURVEY")
-			// SET ANWERS TO ALL VALUES
-			allAnswers = modules.SetAnswers(questions)
+			allAnswers = modules.SetAnswers(allQuestions)
 		}
 
-		// LIST VALUES
-		listDefaults := modules.ReadKCLList(templatePath)
-		log.Info().Fields(listDefaults).Msg("LIST DEFAULTS")
+		// Process list inputs from all templates
+		listDefaults := make(map[string]interface{})
+		for _, template := range templates {
+			defaults := modules.ReadKCLList(template.Source)
+			listDefaults = internal.MergeMaps(listDefaults, defaults)
+		}
 
 		if runSurvey {
 			listAnswers = modules.RunListEditor(listDefaults)
@@ -174,23 +177,23 @@ var renderCmd = &cobra.Command{
 			listAnswers = listDefaults
 		}
 
-		// MERGE ALL ANSWERS WITH LIST ANSWERS
+		// Merge all answers and render each template
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
-		log.Info().Fields(allAnswers).Msg("ALL ANSWERS")
+		log.Info().Fields(allAnswers).Msg("COMBINED ANSWERS")
 
-		// RENDER KCL FILE TO YAML
-		renderedYaml := internal.RenderKCL(templatePath, allAnswers)
+		// Process each template
+		for _, template := range templates {
+			// Render template
+			renderedYaml := internal.RenderKCL(template.Source, allAnswers)
 
-		// fmt.Println("RENDERED YAML", renderedYaml)
-
-		if runSurvey {
-			// INITIALIZE AND RUN THE TERMINAL EDITOR PROGRAM.
-			renderedYaml = modules.RunEditor(internal.CleanString(renderedYaml))
-			// SAVE DIALOG
-			modules.SaveDialog(renderedYaml)
-		} else {
-			internal.SaveToFile(renderedYaml, destinationPath)
-			log.Info().Str("path", destinationPath).Msg("OUTPUTFILE WRITTEN ✅")
+			// Handle user interaction
+			if runSurvey {
+				renderedYaml = modules.RunEditor(internal.CleanString(renderedYaml))
+				modules.SaveDialog(renderedYaml)
+			} else {
+				internal.SaveToFile(renderedYaml, template.Destination)
+				log.Info().Str("path", template.Destination).Msg("OUTPUT FILE WRITTEN ✅")
+			}
 		}
 	},
 }
