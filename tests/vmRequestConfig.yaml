@@ -21,7 +21,10 @@ dicts:
       env: labul
       cloud: proxmox
       kind: proxmoxvmansible
-      template: tests/proxmoxvmansible-labul.k
+      templates:
+        - tests/proxmoxvmansible-labul.k:/test/proxmoxvmansible-labul.yaml
+        - tests/catalog.k:/test/catalog.yaml
+
     labda_vspherevm:
       env: labda
       cloud: vsphere

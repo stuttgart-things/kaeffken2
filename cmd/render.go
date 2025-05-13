@@ -5,6 +5,7 @@ Copyright © 2024 PATRICK HERMANN PATRICK.HERMANN@SVA.DE
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -112,7 +113,9 @@ var renderCmd = &cobra.Command{
 			}
 
 		} else {
-			log.Warn().Msg("NO CONFIG GIVEN")
+			log.Error().Msg("NO CONFIG FILE GIVEN - EXITING..")
+			// EXIT PROGRAM
+			os.Exit(1)
 		}
 
 		// IF TEMPLATE IS GIVEN
@@ -130,9 +133,13 @@ var renderCmd = &cobra.Command{
 		// GET DICT VALUES FROM ALL FIELDS
 
 		// LOAD THE QUESTIONS FROM A KCL FILE
-
 		if templatePath == "" {
-			templatePath = allAnswers["template"].(string)
+
+			templates, err := internal.GetTemplatesPaths(allAnswers, values, "templates")
+			internal.CheckErr(err, "ERROR READING KCL QUESTIONS")
+
+			fmt.Println("Templates:", templates)
+
 			log.Info().Str("template", templatePath).Msg("TEMPLATE PATH SET FROM CONFIG")
 		}
 
