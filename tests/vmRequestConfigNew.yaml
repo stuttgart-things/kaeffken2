@@ -1,0 +1,54 @@
+---
+# GIT CONFIG
+spec:
+  kind: # IF KIND IS NOT GIVEN, CHOOSE RANDOM
+  - labul_proxmoxvm
+  - labda_vspherevm
+  - labul_vspherevm
+  size: # IF SIZE IS NOT GIVEN, CHOOSE RANDOM
+  - small
+  - medium
+  - large
+  - xlarge
+
+dicts:
+  kinds:
+    labul_proxmoxvm:
+      env: labul
+      cloud: proxmox
+      kind: proxmoxvmansible
+      templates:
+        - tests/proxmoxvmansible-labul.k:{{ .name }}-{{ .cloud }}.k
+        - tests/catalog.yaml:clusters/{{ .cloud }}/{{ .name }}.yaml
+      destination: local # or github.com/stuttgart-things/kaeffken2.git
+      pr_branch: "vm-config-{{ .name }}-{{ .cloud }}"
+
+
+    labda_vspherevm:
+      env: labda
+      cloud: vsphere
+      kind: vspherevmansible
+      template: vspherevmansible-labda.k
+    labul_vspherevm:
+      env: labul
+      cloud: vsphere
+      kind: proxmoxvmansible
+      template: vspherevmansible-labul.k
+
+  sizes:
+    small:
+      cpu: 1
+      memory: 2Gi
+      disk: 20Gi
+    medium:
+      cpu: 2
+      memory: 4Gi
+      disk: 40Gi
+    large:
+      cpu: 4
+      memory: 8Gi
+      disk: 80Gi
+    xlarge:
+      cpu: 8
+      memory: 16Gi
+      disk: 160Gi
