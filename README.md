@@ -25,3 +25,13 @@ kaeffken2 render \
 ```
 
 </details>
+
+## TESTS
+
+<details><summary>RENDER w/ KCL CLI AND PARAMETERS</summary>
+
+```bash
+kcl catalog.k -D name="vm-02"
+```
+
+</details>

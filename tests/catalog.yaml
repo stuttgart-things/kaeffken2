@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: my-virtual-machine
+  description: A virtual machine provisioned on Proxmox using Crossplane
+  tags:
+    - vm
+    - proxmox
+    - crossplane
+spec:
+  type: service
+  lifecycle: production
+  owner: team-x
+  system: infrastructure
+  parameters:
+    vmName: my-vm-name
+    vmId: proxmox-vm-001
+    ipAddress: 192.168.1.100
+    osType: Ubuntu 20.04
+    cpu: 2
+    memory: 4Gi
+    storage: 100Gi
+  links:
+    - url: https://proxmox.example.com
+      title: Proxmox Dashboard
+  connections:
+    - type: database
+      target: postgres-db
+  relations:
+    - kind: resource
+      name: proxmox-vm
+  owner:
+    kind: team
+    name: team-x

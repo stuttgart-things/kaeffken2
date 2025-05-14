@@ -22,7 +22,7 @@ dicts:
       cloud: proxmox
       kind: proxmoxvmansible
       templates:
-        - tests/proxmoxvmansible-labul.k:/test/proxmoxvmansible-{{ .env }}.yaml
+        - tests/{{ .kind }}-{{ .env }}.k:/test/{{ .kind }}-{{ .env }}.yaml
         # - tests/catalog.k:/test/catalog.yaml
 
     labda_vspherevm:
