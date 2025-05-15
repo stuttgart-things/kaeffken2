@@ -1,3 +1,7 @@
+/*
+Copyright © 2025 PATRICK HERMANN PATRICK.HERMANN@SVA.DE
+*/
+
 package internal
 
 func MergeMaps(a, b map[string]interface{}) map[string]interface{} {

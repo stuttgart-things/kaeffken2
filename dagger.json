@@ -1,8 +1,15 @@
 {
   "name": "ci",
-  "engineVersion": "v0.18.6",
+  "engineVersion": "v0.18.7",
   "sdk": {
     "source": "go"
   },
+  "dependencies": [
+    {
+      "name": "go",
+      "source": "github.com/stuttgart-things/dagger/go@v0.10.2",
+      "pin": "53e74f1cb44910a37663784012ddd95a6c43f856"
+    }
+  ],
   "source": "ci"
 }

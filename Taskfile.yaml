@@ -20,18 +20,31 @@ tasks:
         task=$(yq e '.tasks | keys' Taskfile.yaml | sed 's/^- //' | gum choose)
         task ${task}
 
+  build:
+    cmds:
+      - |
+        gum spin --spinner line --title "Building Go binary..." -- \
+        dagger call -m ci build --src {{ .GO_SRC_DIR }} export --path={{ .BUILD_EXPORT_PATH }} --progress plain
+        du -sh {{ .BUILD_EXPORT_PATH }}/{{ .PROJECT_NAME }}
+    vars:
+      GO_SRC_DIR: .
+      BUILD_EXPORT_PATH:
+        sh: echo $GOPATH/bin
+
+
+
   lint:
     desc: Lint ci tasks
     cmds:
       - dagger call -m {{ .DAGGER_MODULE }} lint --src {{ .TEST_GO_CODE }} --timeout 300s --progress plain || true
 
-  build:
-    desc: Build binary
-    cmds:
-      - dagger call -m {{ .DAGGER_MODULE }} binary --src {{ .TEST_GO_CODE }} --goVersion {{ .GO_VERSION }} --goMainFile {{ .MAIN_GO_FILE }} --binName {{ .PROJECT_NAME }} --progress plain export --path={{ .OUTPUT_DIR }} && ls -lta {{ .OUTPUT_DIR }}
-    vars:
-      MAIN_GO_FILE: main.go
-      OUTPUT_DIR: "/tmp/{{ .PROJECT_NAME }}"
+  # build:
+  #   desc: Build binary
+  #   cmds:
+  #     - dagger call -m {{ .DAGGER_MODULE }} binary --src {{ .TEST_GO_CODE }} --goVersion {{ .GO_VERSION }} --goMainFile {{ .MAIN_GO_FILE }} --binName {{ .PROJECT_NAME }} --progress plain export --path={{ .OUTPUT_DIR }} && ls -lta {{ .OUTPUT_DIR }}
+  #   vars:
+  #     MAIN_GO_FILE: main.go
+  #     OUTPUT_DIR: "/tmp/{{ .PROJECT_NAME }}"
 
   ci:
     desc: ci tasks
