@@ -16,7 +16,38 @@ var (
 	srcDir     = "."
 )
 
-type Ci struct{}
+type Ci struct {
+	// +optional
+	// +default="cgr.dev/chainguard/wolfi-base:latest"
+	BaseImage string
+}
+
+func (m *Ci) TestNonInteractive(
+	ctx context.Context,
+	src *dagger.Directory) {
+
+	// BUILD THE GO MODULE
+	buildOutput, err := m.Build(ctx, src)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Extract the binary file from the build output directory
+	binaryFile := buildOutput.File(binName)
+
+	testContainer := m.container().
+		WithFile("/usr/bin/"+binName, binaryFile).
+		WithExec([]string{"chmod", "+x", "/usr/bin/" + binName})
+
+	_, err = testContainer.
+		WithExec([]string{"sh", "-c", binName + " version"}).Stdout(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+
+}
 
 func (m *Ci) Build(
 	ctx context.Context,
@@ -39,4 +70,14 @@ func (m *Ci) Build(
 
 	return buildOutput, nil
 
+}
+
+func (m *Ci) container() *dagger.Container {
+	if m.BaseImage == "" {
+		m.BaseImage = "cgr.dev/chainguard/wolfi-base:latest"
+	}
+
+	ctr := dag.Container().From(m.BaseImage)
+
+	return ctr
 }
