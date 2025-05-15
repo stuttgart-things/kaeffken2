@@ -181,12 +181,13 @@ var renderCmd = &cobra.Command{
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
 		log.Info().Fields(allAnswers).Msg("COMBINED ANSWERS")
 
-		// Process each template
+		// PROCESS EACH TEMPLATE
 		for _, template := range templates {
-			// Render template
+
+			// RENDER TEMPLATE
 			renderedYaml := internal.RenderKCL(template.Source, allAnswers)
 
-			// Handle user interaction
+			// HANDLE USER INTERACTION
 			if runSurvey {
 				renderedYaml = modules.RunEditor(internal.CleanString(renderedYaml))
 				modules.SaveDialog(renderedYaml)

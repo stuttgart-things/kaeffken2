@@ -35,3 +35,10 @@ kcl catalog.k -D name="vm-02"
 ```
 
 </details>
+
+
+## CI
+
+```bash
+task build
+```
