@@ -22,15 +22,37 @@ type Ci struct {
 	BaseImage string
 }
 
-func (m *Ci) Debug(
+func (m *Ci) BuildBinary(
 	ctx context.Context,
-	// +ignore=["*", "!analytics"]
-	source *dagger.Directory,
-) *dagger.Directory {
-	return source
+	// +ignore=["**_test.go", "**/testdata/**"]
+	src *dagger.Directory) *dagger.File {
+
+	// BUILD THE GO MODULE
+	buildOutput, err := m.Build(ctx, src)
+	if err != nil {
+		panic(err)
+	}
+
+	// Extract the binary file from the build output directory
+	binaryFile := buildOutput.File(binName)
+
+	testContainer := m.container().
+		WithFile("/usr/bin/"+binName, binaryFile).
+		WithExec([]string{"chmod", "+x", "/usr/bin/" + binName}).
+		WithMountedDirectory("/src", src).
+		WithWorkdir("/src")
+
+	// PRINT VERSION
+	_, err = testContainer.
+		WithExec([]string{binName, "version"}).Stdout(ctx)
+
+	return binaryFile
 }
 
-func (m *Ci) TestNonInteractive(
+// ADD FUNC FOR BUILD TEST CONTAINER AND RETURN THE CONTAINER
+// func (m *Ci) BuildTestContainer()
+
+func (m *Ci) TestRenderCommandNonInteractive(
 	ctx context.Context,
 	// "**", "!**"
 	src *dagger.Directory) {
@@ -48,7 +70,6 @@ func (m *Ci) TestNonInteractive(
 
 	// BUILD THE GO MODULE
 	buildOutput, err := m.Build(ctx, src)
-
 	if err != nil {
 		panic(err)
 	}
