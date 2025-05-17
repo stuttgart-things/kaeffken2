@@ -33,3 +33,22 @@ func TestSaveToFile(t *testing.T) {
 		t.Errorf("file content mismatch. expected %q, got %q", content, string(data))
 	}
 }
+
+func TestCleanUpLines(t *testing.T) {
+	input := `
+- '"golang_version+-1.24.1",'
+- '"manage_filesystem+-true",'
+- '"update_packages+-true",'
+`
+
+	expected := `
+- "golang_version+-1.24.1",
+- "manage_filesystem+-true",
+- "update_packages+-true",
+`
+
+	output := CleanUpLines(input)
+	if output != expected {
+		t.Errorf("output did not match expected\nGot:\n%q\nWant:\n%q", output, expected)
+	}
+}

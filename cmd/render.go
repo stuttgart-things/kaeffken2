@@ -164,7 +164,7 @@ var renderCmd = &cobra.Command{
 			allAnswers = modules.SetAnswers(allQuestions)
 		}
 
-		// Process list inputs from all templates
+		// PROCESS LIST INPUTS FROM ALL TEMPLATES
 		listDefaults := make(map[string]interface{})
 		for _, template := range templates {
 			defaults := modules.ReadKCLList(template.Source)
@@ -177,7 +177,7 @@ var renderCmd = &cobra.Command{
 			listAnswers = listDefaults
 		}
 
-		// Merge all answers and render each template
+		// MERGE ALL ANSWERS AND RENDER EACH TEMPLATE
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
 		log.Info().Fields(allAnswers).Msg("COMBINED ANSWERS")
 

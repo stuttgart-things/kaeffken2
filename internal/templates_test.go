@@ -28,7 +28,7 @@ func TestGetTemplatesPaths_WithTemplating(t *testing.T) {
 		},
 	}
 
-	templates, err := GetTemplatesPaths(allAnswers, "templates", values)
+	templates, err := GetTemplatesPaths(allAnswers, values, "templates")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
