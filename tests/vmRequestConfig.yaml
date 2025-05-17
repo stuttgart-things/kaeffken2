@@ -20,10 +20,11 @@ dicts:
     labul_proxmoxvm:
       env: labul
       cloud: proxmox
+      output: /tmp
       kind: proxmoxvmansible
       templates:
-        - tests/{{ .kind }}-{{ .env }}.k:/tmp/k2/{{ .kind }}-{{ .env }}.yaml
-        - tests/catalog.k:/tmp/k2/catalog-{{ .kind }}-{{ .env }}.yaml
+        - tests/{{ .kind }}-{{ .env }}.k:{{ .output }}/{{ .kind }}-{{ .env }}.yaml
+        - tests/catalog.k:{{ .output }}/catalog-{{ .kind }}-{{ .env }}.yaml
 
         # - tests/catalog.k:/test/catalog.yaml
 

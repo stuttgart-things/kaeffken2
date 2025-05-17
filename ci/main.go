@@ -70,13 +70,17 @@ func (m *Ci) TestNonInteractive(
 	_, err = testContainer.
 		WithExec([]string{binName, "version"}).Stdout(ctx)
 
-	_, err = testContainer.
+	// TEST RENDER COMMAND
+	renderTest := testContainer.
 		WithExec([]string{binName,
 			"render",
 			"--config", "tests/vmRequestConfig.yaml",
 			"--request", "tests/vmRequest.yaml",
 			"--survey=false",
-		}).Stdout(ctx)
+		})
+
+	_, err = renderTest.
+		WithExec([]string{"tree", "/tmp"}).Stdout(ctx)
 
 	if err != nil {
 		panic(err)
