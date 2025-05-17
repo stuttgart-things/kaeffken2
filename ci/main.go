@@ -22,9 +22,29 @@ type Ci struct {
 	BaseImage string
 }
 
+func (m *Ci) Debug(
+	ctx context.Context,
+	// +ignore=["*", "!analytics"]
+	source *dagger.Directory,
+) *dagger.Directory {
+	return source
+}
+
 func (m *Ci) TestNonInteractive(
 	ctx context.Context,
+	// "**", "!**"
 	src *dagger.Directory) {
+
+	// LIST ALL ENTRIES
+	entries, err := src.Entries(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	// PRINT ALL ENTRIES
+	for _, entry := range entries {
+		println(entry)
+	}
 
 	// BUILD THE GO MODULE
 	buildOutput, err := m.Build(ctx, src)
@@ -38,10 +58,25 @@ func (m *Ci) TestNonInteractive(
 
 	testContainer := m.container().
 		WithFile("/usr/bin/"+binName, binaryFile).
-		WithExec([]string{"chmod", "+x", "/usr/bin/" + binName})
+		WithExec([]string{"chmod", "+x", "/usr/bin/" + binName}).
+		WithMountedDirectory("/src", src).
+		WithWorkdir("/src")
+
+	// PRINT SRC DIRECTORY
+	_, err = testContainer.
+		WithExec([]string{"tree"}).Stdout(ctx)
+
+	// PRINT VERSION
+	_, err = testContainer.
+		WithExec([]string{binName, "version"}).Stdout(ctx)
 
 	_, err = testContainer.
-		WithExec([]string{"sh", "-c", binName + " version"}).Stdout(ctx)
+		WithExec([]string{binName,
+			"render",
+			"--config", "tests/vmRequestConfig.yaml",
+			"--request", "tests/vmRequest.yaml",
+			"--survey=false",
+		}).Stdout(ctx)
 
 	if err != nil {
 		panic(err)
