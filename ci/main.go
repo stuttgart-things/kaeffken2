@@ -22,36 +22,6 @@ type Ci struct {
 	BaseImage string
 }
 
-func (m *Ci) BuildBinary(
-	ctx context.Context,
-	// +ignore=["**_test.go", "**/testdata/**"]
-	src *dagger.Directory) *dagger.File {
-
-	// BUILD THE GO MODULE
-	buildOutput, err := m.Build(ctx, src)
-	if err != nil {
-		panic(err)
-	}
-
-	// Extract the binary file from the build output directory
-	binaryFile := buildOutput.File(binName)
-
-	testContainer := m.container().
-		WithFile("/usr/bin/"+binName, binaryFile).
-		WithExec([]string{"chmod", "+x", "/usr/bin/" + binName}).
-		WithMountedDirectory("/src", src).
-		WithWorkdir("/src")
-
-	// PRINT VERSION
-	_, err = testContainer.
-		WithExec([]string{binName, "version"}).Stdout(ctx)
-
-	return binaryFile
-}
-
-// ADD FUNC FOR BUILD TEST CONTAINER AND RETURN THE CONTAINER
-// func (m *Ci) BuildTestContainer()
-
 func (m *Ci) TestRenderCommandNonInteractive(
 	ctx context.Context,
 	// "**", "!**"
@@ -68,20 +38,7 @@ func (m *Ci) TestRenderCommandNonInteractive(
 		println(entry)
 	}
 
-	// BUILD THE GO MODULE
-	buildOutput, err := m.Build(ctx, src)
-	if err != nil {
-		panic(err)
-	}
-
-	// Extract the binary file from the build output directory
-	binaryFile := buildOutput.File(binName)
-
-	testContainer := m.container().
-		WithFile("/usr/bin/"+binName, binaryFile).
-		WithExec([]string{"chmod", "+x", "/usr/bin/" + binName}).
-		WithMountedDirectory("/src", src).
-		WithWorkdir("/src")
+	testContainer := m.container(ctx, src)
 
 	// PRINT SRC DIRECTORY
 	_, err = testContainer.
@@ -132,12 +89,29 @@ func (m *Ci) Build(
 
 }
 
-func (m *Ci) container() *dagger.Container {
+func (m *Ci) container(
+	ctx context.Context,
+	src *dagger.Directory,
+) *dagger.Container {
+
 	if m.BaseImage == "" {
 		m.BaseImage = "cgr.dev/chainguard/wolfi-base:latest"
 	}
 
 	ctr := dag.Container().From(m.BaseImage)
 
-	return ctr
+	// BUILD THE GO MODULE
+	buildOutput, err := m.Build(ctx, src)
+	if err != nil {
+		panic(err)
+	}
+
+	// EXTRACT THE BINARY FILE FROM THE BUILD OUTPUT DIRECTORY
+	binaryFile := buildOutput.File(binName)
+
+	return ctr.
+		WithFile("/usr/bin/"+binName, binaryFile).
+		WithExec([]string{"chmod", "+x", "/usr/bin/" + binName}).
+		WithMountedDirectory("/src", src).
+		WithWorkdir("/src")
 }
