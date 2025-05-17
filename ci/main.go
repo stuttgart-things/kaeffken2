@@ -22,22 +22,21 @@ type Ci struct {
 	BaseImage string
 }
 
-func (m *Ci) TestRenderCommandNonInteractive(
+func (m *Ci) TestRenderCommand(
 	ctx context.Context,
 	// "**", "!**"
 	src *dagger.Directory) {
 
-	// LIST ALL ENTRIES
+	// LIST ALL FILE ENTRIES
 	entries, err := src.Entries(ctx)
 	if err != nil {
 		panic(err)
 	}
-
-	// PRINT ALL ENTRIES
 	for _, entry := range entries {
 		println(entry)
 	}
 
+	// CREATE TESTE CONTAINER
 	testContainer := m.container(ctx, src)
 
 	// PRINT SRC DIRECTORY
@@ -68,7 +67,9 @@ func (m *Ci) TestRenderCommandNonInteractive(
 
 func (m *Ci) Build(
 	ctx context.Context,
-	src *dagger.Directory) (*dagger.Directory, error) {
+	src *dagger.Directory) (
+	*dagger.File,
+	error) {
 
 	// INITIALIZE THE GO MODULE
 	goModule := dag.Go()
@@ -85,8 +86,9 @@ func (m *Ci) Build(
 			Ldflags:    ldflags,
 		})
 
-	return buildOutput, nil
+	binaryFile := buildOutput.File(binName)
 
+	return binaryFile, nil
 }
 
 func (m *Ci) container(
@@ -101,13 +103,10 @@ func (m *Ci) container(
 	ctr := dag.Container().From(m.BaseImage)
 
 	// BUILD THE GO MODULE
-	buildOutput, err := m.Build(ctx, src)
+	binaryFile, err := m.Build(ctx, src)
 	if err != nil {
 		panic(err)
 	}
-
-	// EXTRACT THE BINARY FILE FROM THE BUILD OUTPUT DIRECTORY
-	binaryFile := buildOutput.File(binName)
 
 	return ctr.
 		WithFile("/usr/bin/"+binName, binaryFile).
