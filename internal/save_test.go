@@ -42,12 +42,12 @@ func TestCleanUpLines(t *testing.T) {
 `
 
 	expected := `
-- "golang_version+-1.24.1",
-- "manage_filesystem+-true",
-- "update_packages+-true",
+- "golang_version+-1.24.1"
+- "manage_filesystem+-true"
+- "update_packages+-true"
 `
 
-	output := CleanUpLines(input)
+	output := cleanUpLines(input)
 	if output != expected {
 		t.Errorf("output did not match expected\nGot:\n%q\nWant:\n%q", output, expected)
 	}
