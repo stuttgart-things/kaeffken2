@@ -86,7 +86,7 @@ proxmox_vm_ansible.ProxmoxVMAnsible {
             gitRepoUrl = "https://github.com/stuttgart-things/ansible.git"
             gitRevision = "main"
             providerRef = {
-                name = "kubernetes-incluster"
+                name = "in-cluster"
             }
             vaultSecretName = "vault"
             pipelineNamespace = "tekton-pipelines"

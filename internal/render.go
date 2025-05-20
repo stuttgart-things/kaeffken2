@@ -22,11 +22,14 @@ func RenderKCL(kclFile string, allAnswers map[string]interface{}) string {
 	}
 
 	// OUTPUT ALL ANSWERS + MODIFY
+	fmt.Println("RENDERING KCL")
 	for key, value := range allAnswers {
 		fmt.Printf("%s=%v\n", key, value)
 	}
 
 	values := convertToOptionStrings(allAnswers)
+
+	fmt.Println("OPTS", values)
 	//fmt.Println("OPTS", values)
 
 	// options := []string{"name=kcl", fmt.Sprintf("cpu='1'")}
@@ -53,15 +56,17 @@ func convertToOptionStrings(answers map[string]interface{}) []string {
 	var options []string
 
 	for key, value := range answers {
-		// Convert the value to string
+		// Convert the value to a quoted string
 		var strValue string
 		switch v := value.(type) {
 		case string:
-			strValue = v
-			strValue = "'" + strValue + "'"
+			strValue = fmt.Sprintf("'%s'", v)
+		case int, int32, int64, float32, float64, bool:
+			strValue = fmt.Sprintf("'%v'", v)
+		default:
+			strValue = fmt.Sprintf("'%v'", v) // Fallback for other types
 		}
 
-		// Create the "key=value" string and add to slice
 		options = append(options, fmt.Sprintf("%s=%s", key, strValue))
 	}
 

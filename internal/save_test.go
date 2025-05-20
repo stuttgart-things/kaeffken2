@@ -38,7 +38,7 @@ func TestCleanUpLines(t *testing.T) {
 	input := `
 - '"golang_version+-1.24.1",'
 - '"manage_filesystem+-true",'
-- '"update_packages+-true",'
+- '"update_packages+-true"
 `
 
 	expected := `

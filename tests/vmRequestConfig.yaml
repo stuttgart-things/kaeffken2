@@ -41,18 +41,18 @@ dicts:
 
   sizes:
     small:
-      cpu: 1
-      memory: 2Gi
-      disk: 20Gi
-    medium:
       cpu: 2
-      memory: 4Gi
-      disk: 40Gi
-    large:
+      ram: 4096
+      disk: 32G
+    medium:
       cpu: 4
-      memory: 8Gi
-      disk: 80Gi
+      ram: 8192
+      disk: 64G
+    large:
+      cpu: 6
+      ram: 12288
+      disk: 128G
     xlarge:
       cpu: 8
-      memory: 16Gi
-      disk: 160Gi
+      ram: 16384
+      disk: 196G

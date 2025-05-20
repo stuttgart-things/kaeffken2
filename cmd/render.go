@@ -5,6 +5,8 @@ Copyright © 2025 PATRICK HERMANN PATRICK.HERMANN@SVA.DE
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 
@@ -150,8 +152,23 @@ var renderCmd = &cobra.Command{
 
 		// Get answers either randomly or via survey
 		if !runSurvey {
-			allAnswers = survey.GetRandomAnswers(allQuestions)
+			allRandoms := survey.GetRandomAnswers(allQuestions)
+			// fmt.Println("RANDOM ANSWERS:")
+			// for k, v := range allRandoms {
+			// 	fmt.Printf("%s: %v\n", k, v)
+			// }
+			log.Info().Interface("random", allRandoms).Msg("ALL RANDOM VALUES")
+
+			allAnswers = internal.MergeMaps(allRandoms, allAnswers)
+
+			log.Info().Interface("config", allAnswers).Msg("ALL VALUES")
+
+			// MERGE ALL VALUES FROM ALL TEMPLATES w/ VALUES
+
 			allAnswers = internal.MergeMaps(allAnswers, values)
+
+			log.Info().Interface("values", allAnswers).Msg("ALL VALUES MERGED")
+
 		}
 
 		// Build and run survey if enabled
@@ -177,9 +194,20 @@ var renderCmd = &cobra.Command{
 			listAnswers = listDefaults
 		}
 
+		fmt.Println("ALL ANSWERS:")
+		for k, v := range allAnswers {
+			fmt.Printf("%s: %v\n", k, v)
+		}
+
 		// MERGE ALL ANSWERS AND RENDER EACH TEMPLATE
 		allAnswers = internal.MergeMaps(allAnswers, internal.CleanMap(listAnswers))
 		log.Info().Fields(allAnswers).Msg("COMBINED ANSWERS")
+
+		fmt.Println("FINAL ANSWERS:")
+		for k, v := range allAnswers {
+			fmt.Printf("%s: %v\n", k, v)
+		}
+		writeMapAsJSON(allAnswers, "answers.json")
 
 		// PROCESS EACH TEMPLATE
 		for _, template := range templates {
@@ -210,3 +238,14 @@ func init() {
 }
 
 // go run main.go render --template tests/ansiblerun.k --values name=bla --request tests/vmRequest.yaml --config /home/sthings/projects/golang/kaeffken2/tests/vmRequestConfig.yaml
+func writeMapAsJSON(data map[string]interface{}, filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("create file: %w", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ") // Pretty-print
+	return encoder.Encode(data)
+}
