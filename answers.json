@@ -23,9 +23,9 @@
     "\"https://github.com/stuttgart-things/ansible/releases/download/sthings-baseos-25.1.814.tar.gz/sthings-baseos-25.1.814.tar.gz\""
   ],
   "count": 1,
-  "cpu": 2,
-  "description": "pibsgszkzmgnzhlscmdnz",
-  "disk": "32G",
+  "cpu": 6,
+  "description": "dipjmctwbvnoqyjrhzxlxkoxltgg",
+  "disk": "128G",
   "env": "labul",
   "kind": "proxmoxvmansible",
   "name": "srvtest",
@@ -37,7 +37,7 @@
     "\"sthings.baseos.setup\",",
     "\"sthings.baseos.dev\""
   ],
-  "ram": 815,
+  "ram": 12288,
   "template": "rocky9",
   "templates": [
     "tests/{{ .kind }}-{{ .env }}.k:{{ .output }}/{{ .kind }}-{{ .env }}.yaml",
