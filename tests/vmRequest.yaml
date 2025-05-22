@@ -5,4 +5,4 @@ metadata:
   name: test-vm
 spec:
   kind: labul_proxmoxvm
-  size: large
+  size: small

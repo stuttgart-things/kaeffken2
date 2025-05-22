@@ -63,8 +63,8 @@ func convertToOptionStrings(answers map[string]interface{}) []string {
 			strValue = fmt.Sprintf("'%s'", v)
 		case int, int32, int64, float32, float64, bool:
 			strValue = fmt.Sprintf("'%v'", v)
-		default:
-			strValue = fmt.Sprintf("'%v'", v) // Fallback for other types
+			// default:
+			// 	strValue = fmt.Sprintf("'%v'", v) // Fallback for other types
 		}
 
 		options = append(options, fmt.Sprintf("%s=%s", key, strValue))
